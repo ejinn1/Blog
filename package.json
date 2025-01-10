@@ -13,19 +13,18 @@
   },
   "dependencies": {
     "@commitlint/types": "^19.5.0",
+    "@mdx-js/loader": "^3.1.0",
+    "@mdx-js/react": "^3.1.0",
     "@next/eslint-plugin-next": "^15.1.4",
-    "@payloadcms/db-mongodb": "^3.15.1",
-    "@payloadcms/next": "^3.15.1",
-    "@payloadcms/richtext-lexical": "^3.15.1",
+    "@next/mdx": "^15.1.4",
+    "@types/mdx": "^2.0.13",
     "eslint-define-config": "^2.1.0",
     "eslint-plugin-import": "^2.31.0",
     "eslint-plugin-react-hooks": "^5.1.0",
     "next": "15.1.4",
-    "payload": "^3.15.1",
     "pnpm": "^9.15.3",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0",
-    "sharp": "^0.33.5"
+    "react-dom": "^19.0.0"
   },
   "devDependencies": {
     "@commitlint/cli": "^19.6.1",
