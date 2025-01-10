@@ -18,6 +18,8 @@
     "@next/eslint-plugin-next": "^15.1.4",
     "@next/mdx": "^15.1.4",
     "@types/mdx": "^2.0.13",
+    "clsx": "^2.1.1",
+    "cva": "^0.0.0",
     "eslint-define-config": "^2.1.0",
     "eslint-plugin-import": "^2.31.0",
     "eslint-plugin-react-hooks": "^5.1.0",
@@ -26,6 +28,7 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "remark-gfm": "^4.0.0",
+    "tailwind-merge": "^2.6.0",
     "tailwindcss-preset-px-to-rem": "^1.2.1"
   },
   "devDependencies": {
