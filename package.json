@@ -24,7 +24,9 @@
     "next": "15.1.4",
     "pnpm": "^9.15.3",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "remark-gfm": "^4.0.0",
+    "tailwindcss-preset-px-to-rem": "^1.2.1"
   },
   "devDependencies": {
     "@commitlint/cli": "^19.6.1",

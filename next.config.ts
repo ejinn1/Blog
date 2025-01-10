@@ -1,7 +1,7 @@
 import createMDX from '@next/mdx';
 import type { NextConfig } from 'next';
+import remarkGfm from 'remark-gfm';
 
-/** @type {import('next').NextConfig} */
 const nextConfig: NextConfig = {
   /* config options here */
   pageExtensions: ['js', 'jsx', 'md', 'mdx', 'ts', 'tsx'],
@@ -9,6 +9,9 @@ const nextConfig: NextConfig = {
 
 const withMDX = createMDX({
   // Add markdown plugins here, as desired
+  options: {
+    remarkPlugins: [remarkGfm],
+  },
 });
 
 export default withMDX(nextConfig);
