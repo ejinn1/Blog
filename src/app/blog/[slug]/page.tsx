@@ -1,13 +1,14 @@
 import { Metadata } from 'next';
 
 type BlogPageProps = {
-  params: { slug: string };
+  params: Promise<{ slug: string }>;
 };
 
 export async function generateMetadata({
   params,
 }: BlogPageProps): Promise<Metadata> {
-  const { meta } = await import(`@/content/${params.slug}.mdx`);
+  const slug = (await params).slug;
+  const { meta } = await import(`@/content/${slug}.mdx`);
 
   return {
     title: meta.title,
