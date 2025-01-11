@@ -32,8 +32,9 @@ export default async function BlogPage({
 
   return (
     <div>
-      {/* <h1>{meta.title}</h1> */}
-      <Post />
+      <article className="prose">
+        <Post />
+      </article>
     </div>
   );
 }

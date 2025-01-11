@@ -1,3 +1,9 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@import './github-dark.css';
+
+pre {
+  @apply rounded-md overflow-x-auto p-16 m-8;
+}

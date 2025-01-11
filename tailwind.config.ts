@@ -5,6 +5,8 @@ import { fontWeight } from './src/styles/fontWeight';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const pxToRem = require('tailwindcss-preset-px-to-rem');
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const typoGraphy = require('@tailwindcss/typography');
 
 export default {
   presets: [pxToRem],
@@ -18,5 +20,5 @@ export default {
       },
     },
   },
-  plugins: [],
+  plugins: [typoGraphy],
 } satisfies Config;
