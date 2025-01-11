@@ -1,22 +1,30 @@
 import { Metadata } from 'next';
+import { ComponentType } from 'react';
 
-type BlogPageProps = {
+import { CustomMetadata } from '@/shared/types/meta';
+
+interface BlogPageProps {
   params: Promise<{ slug: string }>;
-};
+}
 
 export async function generateMetadata({
   params,
 }: BlogPageProps): Promise<Metadata> {
   const slug = (await params).slug;
-  const { meta } = await import(`@/content/${slug}.mdx`);
+  const { meta } = (await import(`@/content/${slug}.mdx`)) as {
+    meta: CustomMetadata;
+  };
 
   return {
     title: meta.title,
     description: meta.description,
+    category: meta.category,
+    keywords: meta.keywords,
     openGraph: {
       title: meta.title,
       description: meta.description,
-      images: meta.image ? [meta.image] : [],
+      images: meta.images ? [...meta.images] : [],
+      publishedTime: meta.date,
     },
   };
 }
@@ -27,7 +35,10 @@ export default async function BlogPage({
   params: Promise<{ slug: string }>;
 }) {
   const slug = (await params).slug;
-  const { default: Post, meta } = await import(`@/content/${slug}.mdx`);
+  const { default: Post, meta } = (await import(`@/content/${slug}.mdx`)) as {
+    default: ComponentType;
+    meta: CustomMetadata;
+  };
 
   console.log(meta);
 
