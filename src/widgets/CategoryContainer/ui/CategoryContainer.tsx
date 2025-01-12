@@ -7,7 +7,7 @@ const CategoryContainer = async () => {
   return (
     <div className="flex flex-wrap gap-8">
       {categorys.map((category) => (
-        <Category category={category} />
+        <Category key={category} category={category} />
       ))}
     </div>
   );

@@ -1,28 +1,30 @@
+import Post from '@/entities/post/ui/Post';
 import { getAllPosts } from '@/shared/lib/getPost';
 import { CategoryContainer } from '@/widgets/CategoryContainer';
 
 export default async function Home() {
   const posts = await getAllPosts();
 
-  console.log('files', posts);
-
   return (
-    <div className="size-full py-24 md:w-700">
-      <h1>My Blog</h1>
-      <p>main page</p>
-
+    <div className="size-full py-24 md:w-750">
       {/* 카테고리 영역 */}
-      <section aria-labelledby="category-filter" className="flex-center">
+      <section
+        aria-labelledby="category-filter"
+        className="flex-center my-40 px-16"
+      >
         <CategoryContainer />
       </section>
 
       {/* 게시글 영역 */}
       <section aria-labelledby="posts-list">
         {posts.map((post) => (
-          <article key={post.slug}>
-            <h2>{post.slug}</h2>
-            <p>{post.meta.title}</p>
-          </article>
+          <Post
+            key={post.slug}
+            slug={post.slug}
+            title={post.meta.title}
+            describtion={post.meta.description}
+            date={post.meta.date}
+          />
         ))}
       </section>
     </div>

@@ -41,7 +41,7 @@ export default async function BlogPage({
   };
 
   return (
-    <div className="size-full py-24 md:w-700">
+    <div className="size-full py-24 md:w-750">
       <article className="prose px-16">
         <Post />
       </article>
@@ -50,7 +50,13 @@ export default async function BlogPage({
 }
 
 export function generateStaticParams() {
-  return [{ slug: 'first' }, { slug: 'second' }];
+  return [
+    { slug: 'first' },
+    { slug: 'second' },
+    { slug: 'test' },
+    { slug: 'test2' },
+    { slug: 'test3' },
+  ];
 }
 
 export const dynamicParams = false;
