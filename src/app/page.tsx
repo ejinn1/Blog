@@ -1,5 +1,5 @@
 import { getAllPosts } from '@/shared/lib/getPost';
-import { Header } from '@/widgets/Header';
+import { CategoryContainer } from '@/widgets/CategoryContainer';
 
 export default async function Home() {
   const posts = await getAllPosts();
@@ -7,21 +7,24 @@ export default async function Home() {
   console.log('files', posts);
 
   return (
-    <div>
-      <Header />
-      <main>
-        <h1>My Blog</h1>
-        <p>main page</p>
+    <>
+      <h1>My Blog</h1>
+      <p>main page</p>
 
-        <article>
-          {posts.map((post) => (
-            <div>
-              <h2>{post.slug}</h2>
-              <p>{post.meta.title}</p>
-            </div>
-          ))}
-        </article>
-      </main>
-    </div>
+      {/* 카테고리 영역 */}
+      <section aria-labelledby="category-filter" className="flex-center">
+        <CategoryContainer />
+      </section>
+
+      {/* 게시글 영역 */}
+      <section aria-labelledby="posts-list">
+        {posts.map((post) => (
+          <article key={post.slug}>
+            <h2>{post.slug}</h2>
+            <p>{post.meta.title}</p>
+          </article>
+        ))}
+      </section>
+    </>
   );
 }
