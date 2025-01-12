@@ -25,9 +25,9 @@ export default function RootLayout({
   return (
     <html lang="en" className={pretendard.variable}>
       <body className={`font-pretendard antialiased`}>
-        <div className="relative flex h-screen w-screen flex-col overflow-y-scroll">
+        <div className="bg-beige-100 relative flex h-screen w-screen flex-col overflow-x-hidden overflow-y-scroll">
           <Header />
-          <main className="grow">{children}</main>
+          <main className="flex-center grow">{children}</main>
           <Footer />
         </div>
       </body>

@@ -41,8 +41,8 @@ export default async function BlogPage({
   };
 
   return (
-    <div>
-      <article className="prose">
+    <div className="size-full py-24 md:w-700">
+      <article className="prose px-16">
         <Post />
       </article>
     </div>

@@ -7,7 +7,7 @@ export default async function Home() {
   console.log('files', posts);
 
   return (
-    <>
+    <div className="size-full py-24 md:w-700">
       <h1>My Blog</h1>
       <p>main page</p>
 
@@ -25,6 +25,6 @@ export default async function Home() {
           </article>
         ))}
       </section>
-    </>
+    </div>
   );
 }

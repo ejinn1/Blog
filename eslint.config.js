@@ -47,6 +47,7 @@ export default tseslint.config(
         },
       ],
       'react/react-in-jsx-scope': 'off',
+      'tailwindcss/no-custom-classname': 'off',
     },
   },
 );
