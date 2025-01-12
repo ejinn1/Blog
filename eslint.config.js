@@ -5,6 +5,7 @@ import importPlugin from 'eslint-plugin-import';
 import prettierPlugin from 'eslint-plugin-prettier';
 import react from 'eslint-plugin-react';
 import reactHooks from 'eslint-plugin-react-hooks';
+import tailwind from 'eslint-plugin-tailwindcss';
 import globals from 'globals';
 import tseslint, { parser } from 'typescript-eslint';
 
@@ -14,6 +15,7 @@ export default tseslint.config(
     extends: [
       js.configs.recommended,
       ...tseslint.configs.recommended,
+      ...tailwind.configs['flat/recommended'],
       prettier,
     ],
     files: ['**/*.{ts,tsx}'],
