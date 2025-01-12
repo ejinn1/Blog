@@ -1,7 +1,6 @@
 import type { Config } from 'tailwindcss';
 
-import { colors } from './src/styles/colors';
-import { fontWeight } from './src/styles/fontWeight';
+import { colors } from './src/styles/custom/colors';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const pxToRem = require('tailwindcss-preset-px-to-rem');
@@ -14,7 +13,6 @@ export default {
   theme: {
     extend: {
       colors: colors,
-      fontWeight: fontWeight,
       fontFamily: {
         pretendard: ['var(--font-pretendard)'],
       },

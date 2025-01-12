@@ -1,0 +1,14 @@
+.prose blockquote p {
+  @apply italic text-gray-200;
+}
+
+.prose p > code {
+  @apply bg-gray-100 text-gray-300 px-4 py-2 rounded;
+}
+
+.prose code::before,
+.prose code::after,
+.prose blockquote p::after,
+.prose blockquote p::before {
+  content: none;
+}
