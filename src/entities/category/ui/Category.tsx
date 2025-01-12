@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 
+import { useCategoryStore } from '@/features/category/store/useCategoryStore';
 import Chip from '@/shared/ui/Chip';
 import { cn } from '@/shared/util/className';
 
@@ -12,8 +13,16 @@ interface CategoryProps {
 const Category = ({ category }: CategoryProps) => {
   const [isActive, setIsActive] = useState(false);
 
+  const addCategory = useCategoryStore((state) => state.addCategory);
+  const removeCategory = useCategoryStore((state) => state.removeCategory);
+
   const handleClickCategory = () => {
     setIsActive((prev) => !prev);
+    if (isActive) {
+      removeCategory(category);
+    } else {
+      addCategory(category);
+    }
   };
 
   const categoryClass = cn(
