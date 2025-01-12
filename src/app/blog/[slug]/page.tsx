@@ -35,12 +35,10 @@ export default async function BlogPage({
   params: Promise<{ slug: string }>;
 }) {
   const slug = (await params).slug;
-  const { default: Post, meta } = (await import(`@/content/${slug}.mdx`)) as {
+  const { default: Post } = (await import(`@/content/${slug}.mdx`)) as {
     default: ComponentType;
     meta: CustomMetadata;
   };
-
-  console.log(meta);
 
   return (
     <div>

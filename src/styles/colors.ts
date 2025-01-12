@@ -9,4 +9,6 @@ export const colors = {
   'green-100': '#72CC82',
   'green-200': '#3CB271',
   'green-300': '#109972',
+
+  beige: '#EFEBE6',
 };

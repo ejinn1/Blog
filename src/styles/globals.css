@@ -7,3 +7,11 @@
 pre {
   @apply rounded-md overflow-x-auto p-16 m-8;
 }
+
+.flex-center {
+  @apply flex items-center justify-center;
+}
+
+.flex-between {
+  @apply flex items-center justify-between;
+}
