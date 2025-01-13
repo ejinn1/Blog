@@ -35,15 +35,24 @@ export default async function BlogPage({
   params: Promise<{ slug: string }>;
 }) {
   const slug = (await params).slug;
-  const { default: Post } = (await import(`@/content/${slug}.mdx`)) as {
+  const { default: Content, meta } = (await import(
+    `@/content/${slug}.mdx`
+  )) as {
     default: ComponentType;
     meta: CustomMetadata;
   };
 
   return (
     <div className="size-full py-24 md:w-750">
-      <article className="prose px-16">
-        <Post />
+      <article className="prose px-16 md:px-50">
+        <header className="border-b border-gray-100 py-16">
+          <h1>{meta.title}</h1>
+          <p className="text-16 font-medium text-gray-300">
+            {meta.description}
+          </p>
+          <p className="mt-16 text-12 text-gray-200">{meta.date}</p>
+        </header>
+        <Content />
       </article>
     </div>
   );
@@ -56,6 +65,7 @@ export function generateStaticParams() {
     { slug: 'test' },
     { slug: 'test2' },
     { slug: 'test3' },
+    { slug: 'next-image' },
   ];
 }
 

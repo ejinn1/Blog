@@ -16,6 +16,13 @@ export default {
       fontFamily: {
         pretendard: ['var(--font-pretendard)'],
       },
+      typography: () => ({
+        DEFAULT: {
+          css: {
+            maxWidth: '750px',
+          },
+        },
+      }),
     },
   },
   plugins: [typoGraphy],

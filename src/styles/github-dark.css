@@ -18,6 +18,7 @@ pre:has(.hljs),
 .hljs {
   color: #c9d1d9;
   background: #0d1117;
+  font-size: 12px;
 }
 
 .hljs-doctag,

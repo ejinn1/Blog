@@ -2,7 +2,7 @@
   @apply italic text-gray-200;
 }
 
-.prose p > code {
+.prose code:not(pre code) {
   @apply bg-gray-100 text-gray-300 px-4 py-2 rounded;
 }
 
