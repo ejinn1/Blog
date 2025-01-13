@@ -47,10 +47,10 @@ export default async function BlogPage({
       <article className="prose px-16 md:px-50">
         <header className="border-b border-gray-100 py-16">
           <h1>{meta.title}</h1>
-          <p className="text-16 font-medium text-gray-300">
+          <p className="text-16 font-medium text-gray-400">
             {meta.description}
           </p>
-          <p className="mt-16 text-12 text-gray-200">{meta.date}</p>
+          <p className="mt-16 text-12 text-gray-300">{meta.date}</p>
         </header>
         <Content />
       </article>

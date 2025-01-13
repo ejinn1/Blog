@@ -1,22 +1,23 @@
-import Post from '@/entities/post/ui/Post';
-import { getAllPosts } from '@/shared/lib/getPost';
+'use client';
 
-const PostContainer = async () => {
-  const posts = await getAllPosts();
-  const orderdPosts = posts.sort(
-    (a, b) => new Date(b.meta.date).getTime() - new Date(a.meta.date).getTime(),
-  );
+import Post from '@/entities/post/ui/Post';
+import { useFilterPost } from '@/features/post/util/useFilterPost';
+import { CustomMetadata } from '@/shared/types/meta';
+
+interface PostContainerProps {
+  posts: {
+    slug: string;
+    meta: CustomMetadata;
+  }[];
+}
+
+const PostContainer = ({ posts }: PostContainerProps) => {
+  const filterdPosts = useFilterPost({ posts });
 
   return (
     <div className="flex flex-col flex-wrap gap-8">
-      {orderdPosts.map((post) => (
-        <Post
-          key={post.slug}
-          slug={post.slug}
-          title={post.meta.title}
-          description={post.meta.description}
-          date={post.meta.date}
-        />
+      {filterdPosts.map((post) => (
+        <Post key={post.slug} slug={post.slug} meta={post.meta} />
       ))}
     </div>
   );

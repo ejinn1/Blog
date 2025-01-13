@@ -1,6 +1,8 @@
 import fs from 'fs';
 import path from 'path';
 
+import { CustomMetadata } from '../types/meta';
+
 const contentDir = path.join(process.cwd(), 'src', 'content');
 
 export async function getAllPosts() {
@@ -10,7 +12,9 @@ export async function getAllPosts() {
       .filter((file) => file.endsWith('.mdx'))
       .map(async (file) => {
         const slug = file.replace(/\.mdx$/, '');
-        const { meta } = await import(`@/content/${slug}.mdx`);
+        const { meta } = (await import(`@/content/${slug}.mdx`)) as {
+          meta: CustomMetadata;
+        };
 
         return {
           slug,
@@ -19,5 +23,7 @@ export async function getAllPosts() {
       }),
   );
 
-  return posts;
+  return posts.sort(
+    (a, b) => new Date(b.meta.date).getTime() - new Date(a.meta.date).getTime(),
+  );
 }

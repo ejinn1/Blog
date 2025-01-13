@@ -1,7 +1,10 @@
+import { getAllPosts } from '@/shared/lib/getPost';
 import { CategoryContainer } from '@/widgets/CategoryContainer';
 import { PostContainer } from '@/widgets/PostContainer';
 
 export default async function Home() {
+  const posts = await getAllPosts();
+
   return (
     <div className="size-full py-24 md:w-750">
       <section
@@ -12,7 +15,7 @@ export default async function Home() {
       </section>
 
       <section aria-labelledby="posts-list">
-        <PostContainer />
+        <PostContainer posts={posts} />
       </section>
     </div>
   );
