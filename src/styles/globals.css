@@ -6,7 +6,7 @@
 @import './custom/typo.css';
 
 pre {
-  @apply rounded-12 overflow-x-auto p-16 m-8;
+  @apply rounded-12 overflow-x-hidden whitespace-pre-wrap p-16 m-8;
 }
 
 .flex-center {

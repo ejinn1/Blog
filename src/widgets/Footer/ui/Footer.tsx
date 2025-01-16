@@ -12,7 +12,6 @@ const Footer = () => {
             height={24}
             alt="github-icon"
           />
-          <span className="text-gray-300">@ejinn1</span>
         </div>
       </Link>
     </footer>
