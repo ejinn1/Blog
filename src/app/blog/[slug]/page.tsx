@@ -66,6 +66,7 @@ export function generateStaticParams() {
     { slug: 'test2' },
     { slug: 'test3' },
     { slug: 'next-image' },
+    { slug: 'frontend-code' },
   ];
 }
 
