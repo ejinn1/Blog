@@ -60,8 +60,6 @@ export default async function BlogPage({
 
 export function generateStaticParams() {
   return [
-    { slug: 'first' },
-    { slug: 'second' },
     { slug: 'test' },
     { slug: 'test2' },
     { slug: 'test3' },
