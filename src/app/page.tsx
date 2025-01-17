@@ -1,4 +1,4 @@
-import { getAllPosts } from '@/shared/lib/getPost';
+import { getAllPosts } from '@/entities/post/model/getAllPosts';
 import { CategoryContainer } from '@/widgets/CategoryContainer';
 import { PostContainer } from '@/widgets/PostContainer';
 

@@ -1,9 +1,9 @@
 import { Metadata } from 'next';
 import { ComponentType } from 'react';
 
-import Tag from '@/entities/tag/ui/Tag';
 import { getSlug } from '@/shared/lib/getSlug';
 import { CustomMetadata } from '@/shared/types/meta';
+import Tag from '@/shared/ui/Tag';
 import { getTags } from '@/shared/util/getTags';
 
 interface BlogPageProps {

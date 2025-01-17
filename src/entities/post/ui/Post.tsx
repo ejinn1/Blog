@@ -1,7 +1,7 @@
 import Link from 'next/link';
 
-import Tag from '@/entities/tag/ui/Tag';
 import { CustomMetadata } from '@/shared/types/meta';
+import Tag from '@/shared/ui/Tag';
 import { getTags } from '@/shared/util/getTags';
 
 interface PostProps {

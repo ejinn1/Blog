@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 
-import { CustomMetadata } from '../types/meta';
+import { CustomMetadata } from '@/shared/types/meta';
 
 const contentDir = path.join(process.cwd(), 'src', 'content');
 
