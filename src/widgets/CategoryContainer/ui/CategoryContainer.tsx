@@ -1,5 +1,5 @@
+import { getCategories } from '@/entities/category/model/getCategories';
 import Category from '@/entities/category/ui/Category';
-import { getCategories } from '@/shared/lib/getCategory';
 
 const CategoryContainer = async () => {
   const categorys = await getCategories();
