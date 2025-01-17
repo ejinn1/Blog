@@ -15,7 +15,7 @@ const PostContainer = ({ posts }: PostContainerProps) => {
   const filterdPosts = useFilterPost({ posts });
 
   return (
-    <div className="flex flex-col flex-wrap gap-8">
+    <div className="flex w-full flex-col flex-wrap gap-8">
       {filterdPosts.map((post) => (
         <Post key={post.slug} slug={post.slug} meta={post.meta} />
       ))}

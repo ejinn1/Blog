@@ -3,16 +3,18 @@ import Link from 'next/link';
 
 const Footer = () => {
   return (
-    <footer className="flex-center bg-beige-100 mt-120 min-h-60 text-14">
-      <Link href="https://github.com/ejinn1">
-        <div className="flex items-center gap-8">
-          <Image
-            src="/svg/ic-github.svg"
-            width={24}
-            height={24}
-            alt="github-icon"
-          />
-        </div>
+    <footer className="bg-beige-100 mt-50 flex min-h-60 items-center justify-center text-14 md:mt-120">
+      <Link
+        href="https://github.com/ejinn1"
+        className="flex items-center space-x-4"
+      >
+        <Image
+          src="/svg/ic-github.svg"
+          width={20}
+          height={20}
+          alt="GitHub Icon"
+        />
+        <span className="text-12 font-medium text-gray-300">ejinn1</span>
       </Link>
     </footer>
   );
