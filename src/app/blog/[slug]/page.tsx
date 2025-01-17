@@ -1,6 +1,7 @@
 import { Metadata } from 'next';
 import { ComponentType } from 'react';
 
+import { getSlug } from '@/shared/lib/getSlug';
 import { CustomMetadata } from '@/shared/types/meta';
 
 interface BlogPageProps {
@@ -59,13 +60,7 @@ export default async function BlogPage({
 }
 
 export function generateStaticParams() {
-  return [
-    { slug: 'test' },
-    { slug: 'test2' },
-    { slug: 'test3' },
-    { slug: 'next-image' },
-    { slug: 'frontend-code' },
-  ];
+  return getSlug();
 }
 
 export const dynamicParams = false;
