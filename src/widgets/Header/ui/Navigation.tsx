@@ -1,21 +1,22 @@
+import Image from 'next/image';
+import Link from 'next/link';
+
 export default function Navigation() {
   return (
     <nav>
       <ul className="flex space-x-4">
         <li>
-          <a href="/about" className="hover:underline">
-            About
-          </a>
-        </li>
-        <li>
-          <a href="/blog" className="hover:underline">
-            Blog
-          </a>
-        </li>
-        <li>
-          <a href="/contact" className="hover:underline">
-            Contact
-          </a>
+          <Link
+            href="https://github.com/ejinn1/blog"
+            className="hover:underline"
+          >
+            <Image
+              src="/svg/ic-github.svg"
+              width={24}
+              height={24}
+              alt="Github Icon"
+            />
+          </Link>
         </li>
       </ul>
     </nav>

@@ -16,3 +16,7 @@ pre {
 .flex-between {
   @apply flex items-center justify-between;
 }
+
+.transition-colors-base {
+  @apply transition-colors duration-300 ease-in-out;
+}

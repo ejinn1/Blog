@@ -3,6 +3,6 @@ export interface CustomMetadata {
   description: string;
   date: string;
   category: string;
-  keywords: string[];
+  keywords: string;
   images?: string[];
 }
