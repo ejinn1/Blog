@@ -1,7 +1,6 @@
 import { getAllPosts } from '@/shared/lib/getPost';
 import { CategoryContainer } from '@/widgets/CategoryContainer';
 import { PostContainer } from '@/widgets/PostContainer';
-import { TagContainer } from '@/widgets/TagContainer';
 
 export default async function Home() {
   const posts = await getAllPosts();
@@ -17,7 +16,6 @@ export default async function Home() {
 
       <section aria-labelledby="posts-list" className="flex justify-between">
         <PostContainer posts={posts} />
-        <TagContainer />
       </section>
     </div>
   );

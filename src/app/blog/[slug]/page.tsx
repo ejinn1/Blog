@@ -1,8 +1,10 @@
 import { Metadata } from 'next';
 import { ComponentType } from 'react';
 
+import Tag from '@/entities/tag/ui/Tag';
 import { getSlug } from '@/shared/lib/getSlug';
 import { CustomMetadata } from '@/shared/types/meta';
+import { getTags } from '@/shared/util/getTags';
 
 interface BlogPageProps {
   params: Promise<{ slug: string }>;
@@ -42,6 +44,7 @@ export default async function BlogPage({
     default: ComponentType;
     meta: CustomMetadata;
   };
+  const tags = getTags(meta.keywords);
 
   return (
     <div className="size-full py-24 md:w-750">
@@ -51,7 +54,14 @@ export default async function BlogPage({
           <p className="text-16 font-medium text-gray-400">
             {meta.description}
           </p>
-          <p className="mt-16 text-12 text-gray-300">{meta.date}</p>
+          <div className="mt-16 flex items-center">
+            <p className="mr-20 text-12 text-gray-200">{meta.date}</p>
+            <div className="flex items-center gap-4 pb-4">
+              {tags.map((tag) => (
+                <Tag key={tag} tag={tag} />
+              ))}
+            </div>
+          </div>
         </header>
         <Content />
       </article>
