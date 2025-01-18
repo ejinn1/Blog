@@ -122,9 +122,12 @@ pre:has(.hljs),
   background-color: #67060c;
 }
 
+.hljs-params {
+  color: #ffa657;
+}
+
 .hljs-char.escape_,
 .hljs-link,
-.hljs-params,
 .hljs-property,
 .hljs-punctuation,
 .hljs-tag {

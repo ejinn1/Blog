@@ -1,0 +1,397 @@
+---
+title: '변경하기 쉬운 코드 - 가독성'
+description: '프론트엔드 코드에서의 가독성은 무엇일까?'
+date: '2025-01-18'
+category: '프론트엔드'
+keywords: '클린코드, 가독성'
+---
+
+import Toggle from '@/shared/ui/Toggle.tsx';
+
+## 가독성
+
+> 가독성을 높이려면
+
+**맥락 줄이기**
+
+  <Toggle summary="같이 실행되지 않는 코드를 분리한다.">
+
+[같이 실행되지 않는 코드 분리하기](https://frontend-fundamentals.com/code/examples/submit-button.html)
+
+이 글의 중요 내용은 함수나 컴포넌트가 동시에 실행하지 않는 코드의 분리에 대한 것이다.
+
+```ts
+function SubmitButton() {
+  const isViewer = useRole() === "viewer"
+
+  useEffect(() => {
+    if (isViewer) {
+      return
+    }
+    showButtonAnimation()
+  }, [isViewer])
+
+  return isViewer ? (
+    <TextButton disabled>Submit</TextButton>
+  ) : (
+    <Button type="submit">Submit</Button>
+  )
+}
+```
+
+이렇게 컴포넌트를 분리하여 나타낼 수 있다.
+
+```ts
+function SubmitButton() {
+  const isViewer = useRole() === "viewer"
+
+  return isViewer ? <ViewerSubmitButton /> : <AdminSubmitButton />
+}
+```
+
+하나의 컴포넌트가 동시에 실행하지 않는 여러개의 역할을 담당하고 있다면 각각의 역할에 따라 컴포넌트로 분리하여 다른 사람이 이 코드를 봤을 때 어떤 역할을 담당하고 있는지 이해하기 쉽게 작성해야한다.
+
+  </Toggle>
+
+  <Toggle summary="구현 상세 추상화하기">
+
+[구현 상세 추상화하기](https://frontend-fundamentals.com/code/examples/login-start-page.html)
+
+이 글의 중요 내용은 한 사람이 코드를 읽을 때 가지고 있는 맥락이 너무 많다면 이해하기가 어렵다는 것이다.
+
+```ts
+function LoginStartPage() {
+  useCheckLogin({
+    onChecked: (status) => {
+      if (status === 'LOGGED_IN') {
+        location.href = '/home';
+      }
+    },
+  });
+
+  // ...
+}
+```
+
+이 코드는 로그인을 확인하고 로그인이 되어있다면 사용자를 홈으로 보내는 로직이다.
+이러한 로직이 추상화 없이 작성되었을 때 `useCheckLogin`, `onChecked`, `status`, `"LOGGED_IN"`을 모두 읽어야 이해가 가능하다.
+
+**1. Wrapper 컴포넌트 사용하기**
+
+Wrapper 컴포넌트를 만들어 페이지를 감싸면 복잡성을 줄일 수 있다.
+
+```ts
+function App() {
+  return (
+    <AuthGuard>
+      <LoginStartPage />
+    </AuthGuard>
+  );
+}
+
+function AuthGuard({ children }) {
+  const status = useCheckLoginStatus();
+
+  useEffect(() => {
+    if (status === 'LOGGED_IN') {
+      location.href = '/home';
+    }
+  }, [status]);
+
+  return status !== 'LOGGED_IN' ? children : null;
+}
+```
+
+**2. HOC (Higher-Order Component) 사용하기**
+
+`고차 컴포넌트리는 개념을 처음 알게되었다.`
+
+```ts
+export default withAuthGuard(LoginStartPage)
+
+function withAuthGuard(WrappedComponent) {
+  return function AuthGuard(props) {
+    const status = useCheckLoginStatus()
+
+    useEffect(() => {
+      if(status === "LOGGED_IN"){
+        location.href = "/home"
+      }
+    }, [status])
+
+    return status !== "LOGGED_IN" ? <WrappedComponent {...props} /> : null
+  }
+}
+```
+
+> HOC 컴포넌트는 컴포넌트 로직을 재사용하기 위한 기술이다.
+> 고차 컴포넌트는 컴포넌트를 가져와 새 컴포넌트를 반환하는 함수이다.  
+> [리액트 공식문서](https://ko.legacy.reactjs.org/docs/higher-order-components.html)
+
+**코드에서 추상화**
+
+구현 상세를 지나치게 드러내기보단 작은 단위로 추상화 시키는 것이 코드가 어떤 역할을 하는지 정확하기 파악하기 쉬워진다.
+
+  </Toggle>
+
+  <Toggle summary="로직 종류에 따라서 합쳐진 함수 쪼개기">
+
+[로직 종류에 따라 찹혀진 함수 쪼개기](https://frontend-fundamentals.com/code/examples/use-page-state-readability.html)
+
+이 글의 중요 내용은 `쿼리 파라미터`, `상태`, `API 호출`괴 같은 로직의 종류에 따라서 함수나 컴포넌트, hook을 만들게 되면 한 번에 다루는 맥락의 종류가 많아져 이해하기 어렵다는 것이다.
+
+예를 들어 `usePageState()`라는 hook이 페이지 전체의 URL 쿼리 파라미터를 한 번에 관리한다면
+hook이 담당하고 있는 영역이 넓어지면서, 구현이 길어지고, 어떤 역할을 하는 hook인지 파악하기 힘들어진다.
+
+또한 hook이 관리하고 있는 쿼리 파라미터 하나가 수정되더라도 리렌더링이 발생하게 된다.
+
+- `cardId`를 쿼리 파라미터로 하는 hook을 따로 분리해서 만들 수 있다.
+
+  ```ts
+  export function useCardIdQueryParam() {
+    const [cardId, _setCardId] = useQueryParam('cardId', NumberParam);
+
+    const setCardId = useCallback((cardId: number) => {
+      _setCardId({ cardId }, 'repaceIn');
+    }, []);
+
+    return [cardId ?? undefined, setCardId] as const;
+  }
+  ```
+
+> 좋은 성능을 위해서는 특정한 상태 값이 업데이트되었을 때 최소한의 부분이 리렌더링 되도록 설계해야한다.
+
+  </Toggle>
+
+**이름 붙이기**
+
+<Toggle summary="복잡한 조건에 이름 붙이기">
+
+[복잡한 조건에 이름 붙이기](https://frontend-fundamentals.com/code/examples/condition-name.html)
+
+이 글의 중요 내용은 복잡한 조건식에 이름을 붙히지 않으면 이해하기 어렵다는 것이다.
+
+이 코드는 상품 중에서 카테고리와 가격 범위가 일치하는 상품만 필터링 하는 로직이다.
+
+```ts
+const result = products.filter((product) =>
+  product.categories.some(
+    (category) =>
+      category.id === targetCategory.id &&
+      product.prices.some((price) => price >= minPrice && price <= maxPrice),
+  ),
+);
+```
+
+`filter`, `some`, `&&`같은 로직이 여러번 중첩되어 있어서 정확하게 파악하기 어렵다.
+
+```ts
+const matchedProducts = products.filter((product) => {
+  return product.categories.some((category) => {
+    const isSameCategory = category.id === targetCategory.id;
+    const isPriceInRange = product.prices.some(
+      (price) => price >= minPrice && price <= maxPrice,
+    );
+
+    return isSameCategory && isPriceInRange;
+  });
+});
+```
+
+명시적으로 조건을 명확히 나타내면 파악하기 쉬워진다.
+
+</Toggle>
+
+<Toggle summary="매직 넘버에 이름 붙이기">
+
+[매직 넘버에 이름 붙이기](https://frontend-fundamentals.com/code/examples/magic-number-readability.html)
+
+매직 넘버라는 것은 정확한 뜻을 밝히기 않고 소스 코드 안에 직접 숫자 값을 넣는 것이다.
+
+예시로 `Not Found`는 HTTP 상태 코드로 `404`값을 바로 사용하는 것이 있다.
+
+```ts
+async function onLikeClick() {
+  await postLike(url);
+  await delay(300);
+  await refetchPostLike();
+}
+```
+
+`delay`안의 `300`이라는 값이 어떠한 맥락으로 사용되었는지 알 수 없다.
+
+```ts
+const ANIMATION_DELAY_MS = 300;
+
+async function onLikeClick() {
+  await postLike(url);
+  await delay(ANIMATION_DELAY_MS);
+  await refetchPostLike();
+}
+```
+
+이렇게 상수로 선언해서 맥락 표현을 정확하게 하면 이해하기 쉬워진다.
+
+</Toggle>
+
+**위에서 아래로 읽히게 하기**
+
+<Toggle summary="시점 이동 줄이기">
+
+[시점 이동 줄이기](https://frontend-fundamentals.com/code/examples/user-policy.html)
+
+코드를 읽을 때 위에서 아래로, 하나의 함수나 파일에서 읽을 수 있도록 코드를 작성하면 동작을 파악하기 쉬워진다.
+
+**B. 조건을 한눈에 볼 수 있는 객체로 만들기**
+
+```ts
+function Page() {
+  const user = useUser()
+  const policy = {
+    admin: {canInvite: true, canView: true},
+    viewer: {canInvite: false, canView: true},
+  }[user.role]
+
+  return (
+    <div>
+      <Button disabled={!policy.canInvite}>Invite</Button>
+      <Button disabled={!policy.canView}>View</Button>
+    </div>
+  )
+}
+```
+
+로직을 권한에 따라 객체로 관리하여 시점 이동 없이 한눈에 조건을 파악할 수 있다.
+
+`아 내용은 맥락 줄이기와 비슷한 개념인 것 같다.`
+
+</Toggle>
+
+<Toggle summary="삼항 연산자 단순하게 하기">
+
+[삼항 연산자 단순하게 하기](https://frontend-fundamentals.com/code/examples/ternary-operator.html)
+
+복잡한 삼항 연산자는 조건문으로 풀어서 사용하면 명확하고 간단하게 조건을 드러낼 수 있다.
+
+```ts
+const status = A && B ? 'BOTH' : A || B ? (A ? 'A' : 'B') : 'NONE';
+```
+
+```ts
+const status = (() => {
+  if (A && B) return 'BOTH';
+  if (A) return 'A';
+  if (B) return 'B';
+  return 'NONE';
+})();
+```
+
+</Toggle>
+
+### 이 글을 읽고 적용해보기
+
+찍찍이 프로젝트에서 맥락이 많다고 생각되는 [최근 등록한 할일](https://github.com/slid-todo/front/blob/main/src/components/Dashboard/RecentTodos/index.tsx) 부분의 요약된 코드이다.
+
+```ts
+'use client';
+
+// import ...
+
+export const RecentTodos = () => {
+  const { todos, isLoading } = useRecentTodosQuery();
+  const { goals } = useGoalsQuery();
+
+  // ...
+
+  return (
+    <DashboardItemContainer title="최근 등록한 할일" className="relative">
+      // ...
+      {isLoading ? (
+        <TodoListSkeleton />
+      ) : goals.length === 0 ? (
+        <Card>
+          새 목표 등록
+        </Card>
+      ) : todos.length === 0 ? (
+        <Card>
+          새 할일 등록
+        </Card>
+      ) : (
+        <ul>
+          {todos.map((todo) => (
+            <BasicTodoItem
+              key={todo.todoId}
+              goalColor={todo.goalColor}
+              goalTitle={todo.goalTitle}
+              todoTitle={todo.todoTitle}
+              todoId={todo.todoId}
+            />
+          ))}
+        </ul>
+      )}
+    </DashboardItemContainer>
+  );
+};
+
+```
+
+가독성에 관한 글을 읽고 내 코드르 보니 한 번에 파악하기 어렵고 맥락도 여러가지가 있는 것 같다.
+
+**1. 같이 실행되지 않는 코드를 분리한다.**
+
+`isLoading`, `goals.length === 0`, `todos.length === 0` 을 분리할 수 있을 것 같다.
+
+**2. 이에 대한 각각 이름을 붙일 수 있다.**
+
+```ts
+const hasGoals = goals.length > 0;
+const hasTodos = todos.length > 0;
+```
+
+**3. 삼항 연산자 단순하게 하기로 시점 이동을 최소화할 수 있다.**
+
+**개선한 코드**
+
+```ts
+const RecentTodos = () => {
+  const { todos, isLoading } = useRecentTodosQuery();
+  const { goals } = useGoalsQuery();
+
+  const hasGoals = goals.length > 0;
+  const hasTodos = todos.length > 0;
+
+  if (isLoading) return <TodoListSkeleton />;
+  if (!hasGoals) return <Card>새 목표 등록</Card>;
+  if (!hasTodos) return <Card>새 할일 등록</Card>;
+
+  return (
+    <DashboardItemContainer title="최근 등록한 할일" className="relative">
+      <ul>
+        {todos.map((todo) => (
+          <BasicTodoItem
+            key={todo.todoId}
+            goalColor={todo.goalColor}
+            goalTitle={todo.goalTitle}
+            todoTitle={todo.todoTitle}
+            todoId={todo.todoId}
+          />
+        ))}
+      </ul>
+    </DashboardItemContainer>
+  );
+};
+
+```
+
+가독성과 맥락을 고려하며 리펙토링 하니까 이전보다 코드가 이해하기 쉬워진 것 같다.
+
+<br />
+<br />
+
+---
+
+### 참고
+
+[Frontend Fundamentals 변경하기 쉬운 코드](https://frontend-fundamentals.com/code/)
+
+[고차 컴포넌트 개념](https://ko.legacy.reactjs.org/docs/higher-order-components.html)
