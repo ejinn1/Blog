@@ -4,6 +4,7 @@
 
 @import './github-dark.css';
 @import './custom/typo.css';
+@import './custom//toggle.css';
 
 pre {
   @apply rounded-12 overflow-x-hidden whitespace-pre-wrap p-16 m-8;

@@ -1,0 +1,11 @@
+summary {
+  @apply text-15 font-semibold cursor-pointer;
+}
+
+details {
+  @apply mt-2 text-gray-600 text-14 my-8;
+}
+
+details div {
+  @apply ml-12 pl-10;
+}
