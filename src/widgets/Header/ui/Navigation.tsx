@@ -1,4 +1,3 @@
-import Image from 'next/image';
 import Link from 'next/link';
 
 export default function Navigation() {
@@ -10,12 +9,7 @@ export default function Navigation() {
             href="https://github.com/ejinn1/blog"
             className="hover:underline"
           >
-            <Image
-              src="/svg/ic-github.svg"
-              width={24}
-              height={24}
-              alt="Github Icon"
-            />
+            <span className="text-14 text-gray-300">Github</span>
           </Link>
         </li>
       </ul>
