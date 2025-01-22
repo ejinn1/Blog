@@ -20,6 +20,7 @@ export default {
         DEFAULT: {
           css: {
             maxWidth: '750px',
+            '--tw-prose-body': '#4A4A4A',
           },
         },
       }),
