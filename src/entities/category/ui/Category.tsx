@@ -13,10 +13,10 @@ const Category = ({ category }: CategoryProps) => {
   const { isActive, handleClickCategory } = useActiveCategory(category);
 
   const categoryClass = cn(
-    'px-16 py-4 text-black rounded-full border !text-14 font-medium transition-colors-base hover:bg-green-50 hover:border-gray-100',
+    'px-16 py-4 text-black rounded-full border !text-14 font-medium transition-colors-base hover:bg-green-50 hover:border-gray-100 dark:hover:text-green-100 dark:hover:text-green-200 dark:bg-black dark:border-black',
     isActive
-      ? 'text-green-500 border-green-300 bg-green-50'
-      : 'bg-white border-gray-100',
+      ? 'text-green-500 border-green-300 bg-green-50 dark:text-green-500'
+      : 'bg-white border-gray-100 dark:text-gray-100',
   );
 
   return (
