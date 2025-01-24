@@ -8,6 +8,7 @@ const pxToRem = require('tailwindcss-preset-px-to-rem');
 const typoGraphy = require('@tailwindcss/typography');
 
 export default {
+  darkMode: 'class',
   presets: [pxToRem],
   content: ['./src/**/*.{js,ts,jsx,tsx,mdx}'],
   theme: {
