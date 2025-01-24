@@ -2,6 +2,7 @@ import '@/styles/globals.css';
 import type { Metadata } from 'next';
 import localFont from 'next/font/local';
 
+import CustomThemeProvider from '@/shared/provider/ThemeProvider';
 import { Footer } from '@/widgets/Footer';
 import { Header } from '@/widgets/Header';
 
@@ -23,13 +24,17 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={pretendard.variable}>
-      <body className={`font-pretendard antialiased`}>
-        <div className="bg-beige-100 relative flex h-screen w-screen flex-col overflow-x-hidden overflow-y-scroll">
-          <Header />
-          <main className="flex-center grow">{children}</main>
-          <Footer />
-        </div>
+    <html lang="ko" className={pretendard.variable}>
+      <body
+        className={`bg-beige-100 font-pretendard antialiased dark:bg-black`}
+      >
+        <CustomThemeProvider>
+          <div className="relative flex h-screen w-screen flex-col overflow-x-hidden overflow-y-scroll ">
+            <Header />
+            <main className="flex-center grow">{children}</main>
+            <Footer />
+          </div>
+        </CustomThemeProvider>
       </body>
     </html>
   );

@@ -27,6 +27,7 @@
     "eslint-plugin-tailwindcss": "^3.17.5",
     "highlight.js": "^11.11.1",
     "next": "15.1.4",
+    "next-theme": "^0.1.5",
     "pnpm": "^9.15.3",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
