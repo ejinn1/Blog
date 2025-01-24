@@ -48,10 +48,10 @@ export default async function BlogPage({
 
   return (
     <div className="size-full py-24 md:w-750">
-      <article className="prose px-16 md:px-50">
-        <header className="border-b border-gray-100 py-16">
-          <h1>{meta.title}</h1>
-          <p className="text-16 font-medium text-gray-400">
+      <article className="prose px-16 dark:prose-invert md:px-50">
+        <header className="border-b border-gray-100 py-16 dark:border-gray-400">
+          <h1 className="text-24 font-semibold">{meta.title}</h1>
+          <p className="text-16 font-medium text-gray-400 dark:text-gray-200">
             {meta.description}
           </p>
           <div className="mt-16 flex items-center">

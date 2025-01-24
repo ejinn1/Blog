@@ -6,6 +6,10 @@
   @apply bg-gray-100 text-gray-300 px-4 py-2 rounded;
 }
 
+.dark .prose code:not(pre code) {
+  @apply bg-gray-200 text-gray-400 px-4 py-2 rounded;
+}
+
 .prose code::before,
 .prose code::after,
 .prose blockquote p::after,
