@@ -2,8 +2,8 @@ import '@/styles/globals.css';
 import type { Metadata } from 'next';
 import localFont from 'next/font/local';
 
+import CustomThemeProvider from '@/shared/provider/CustomThemeProvider';
 import ScrollProvider from '@/shared/provider/ScrollProvider';
-import CustomThemeProvider from '@/shared/provider/ThemeProvider';
 import { Footer } from '@/widgets/Footer';
 import { Header } from '@/widgets/Header';
 
