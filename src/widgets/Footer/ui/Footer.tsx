@@ -1,10 +1,11 @@
 import Link from 'next/link';
 
 import ThemeToggle from './ThemeToggle';
+import TopButton from './TopButton';
 
 const Footer = () => {
   return (
-    <footer className="bg-beige-100 mt-50 min-h-60 text-14 dark:bg-black">
+    <footer className="bg-beige-100 mt-50 p-20 text-14 dark:bg-black">
       <div className="flex-between mx-auto max-w-700">
         <Link
           href="https://github.com/ejinn1"
@@ -12,8 +13,9 @@ const Footer = () => {
         >
           ejinn1
         </Link>
-        <div>
+        <div className="flex space-x-4">
           <ThemeToggle />
+          <TopButton />
         </div>
       </div>
     </footer>
