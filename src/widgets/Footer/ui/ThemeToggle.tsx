@@ -15,7 +15,7 @@ const ThemeToggle = () => {
   if (!mounted) return null;
 
   return (
-    <div>
+    <>
       <button
         className="rounded-md bg-gray-100 p-4 text-gray-900 transition-colors duration-300 dark:bg-gray-400 dark:text-gray-100"
         onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
@@ -36,7 +36,16 @@ const ThemeToggle = () => {
           />
         )}
       </button>
-    </div>
+      <button className="rounded-md bg-gray-100 p-4 text-gray-900 transition-colors duration-300 dark:bg-gray-400 dark:text-gray-100">
+        <Image
+          src="/svg/ic-monitor.svg"
+          width={24}
+          height={24}
+          alt="dark mode button"
+          onClick={() => setTheme('system')}
+        />
+      </button>
+    </>
   );
 };
 
