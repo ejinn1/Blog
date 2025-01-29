@@ -1,0 +1,240 @@
+---
+title: 'GraphQL'
+description: 'GraphQL이 뭐지'
+date: '2025-01-29'
+category: 'API'
+keywords: 'graphql'
+---
+
+import Toggle from '@/shared/ui/Toggle.tsx';
+import SpeechBubble from '@/shared/ui/SpeechBubble.tsx';
+
+## GraphQL이란?
+
+기존 REST API는 고정된 엔드포인트를 사용해 데이터를 제공하기 때문에 몇 가지 문제가 발생할 수 있다.
+GraphQL은 단일 엔드포인트를 사용하며 클라이언트가 원하는 데이터만 요청할 수 있도록 설계된 API 쿼리 언어이다.
+
+> RESTful API는 리소스 중심의 데이터를 제공하는 방식이라면 GraphQL은 클라이언트가 필요한 데이터만 선택적으로 요청하는 방식이다.
+
+또한 sql과 마찬가지로 쿼리 언어이다.
+
+<Toggle summary="gql(GraphQL)과 spl의 차이">
+  `SQL`은 **데이터베이스 시스템**에 저장된 데이터를 효율적으로 가져오는 것이
+  목적이고 `GQL`은 **웹 클라이언트**가 데이터를 서버로 부터 효율적으로 가져오는
+  것이 목적이다.
+
+sql 쿼리 예시
+
+```sql
+SELECT name FROM hero
+```
+
+gql 쿼리 예시
+
+```gql
+{
+  hero {
+    name
+    friends {
+      name
+    }
+  }
+}
+```
+
+</Toggle>
+
+## RESTful API는 뭐야
+
+HTTP 프로토콜을 기반으로 동작하며 각 리소스는 고유한 URL을 가지고 있다. ( `GET`, `POST`, `PUT`, `DELETE` )
+
+### 특징
+
+- **고유한 엔드 포인트**: 고유한 URL을 통해 접근된다.
+- **Stateless**: 서버는 클라이언트의 상태를 저장하지 않는다.
+- **일관된 데이터 구조**: 서버가 정한 형식대로 데이터를 받는다.
+
+### 단점
+
+**Over-fetching, Under-fetching**
+
+- Over-fetching: 필요하지 않은 데이터를 받아옴
+- Under-fetching: 필요한 데이터를 얻기 위해서는 여러번의 API 요청을 보내야한다.
+
+**다중 요청 문제**
+
+- 여러 개의 관련 데이터를 가져오려면 여러 번 API를 호출해야한다. (`GET /users/1`, `GET /users/1/posts`)
+
+**API 버전 관리의 어려움**
+
+- 기능이 변경될 때마다 새로운 버전을 만들어야 할 수도 있다. (`/v1/users`, `/v2/users`)
+
+> 이러한 단점들을 극복하고자 GraphQL이 등장했다.
+
+## GraphQL의 개념
+
+### 단일 엔드포인트
+
+REST와 다르게 GraphQL은 모든 요청을 하나의 엔드포인트로 처리한다.
+
+### 클라이언트 주도형 데이터 요청
+
+클라이언트가 필요한 데이터 필드만 선택해서 요청할 수 있다.
+
+```gql
+query {
+  user(id: 1) {
+    name
+    email
+  }
+}
+```
+
+위의 요청은 `name`과 `email` 필드만 반환한다. REST API에서는 `/users/1` 요청 시 필요하지 않은 데이터가 포함될 수도 있다.
+
+REST API 응답 예시
+
+```http
+GET /users/1
+{
+  "id": 1,
+  "name": "aaa",
+  "email": "aaa@example.com",
+  "posts": [...] // 필요 없는 데이터까지 같이 반환된다.
+}
+```
+
+GraphQL 응답 예시
+
+```gql
+{
+  "data": {
+    "user": {
+      "name": "aaa",
+      "email": "aaa@example.com"
+    }
+  }
+}
+```
+
+### 데이터 타입 정의 (Schema 기반)
+
+GraphQL은 타입 시스템을 기반으로 하고
+C, C++의 헤더파일 작성과 비슷하다.
+
+API의 기능과 클라이언트가 상호작용할 수 있는 데이터의 형태를 정의한다.
+
+```gql
+type User {
+  id: ID!
+  name: String!
+  age: Int
+}
+```
+
+**오브젝트 타입과 필드**
+
+- 오브젝트 타입: user
+- 필드: id, name, age
+- 스칼라 타입: String, ID, Int 등
+- 느낌표 (!): 필수 값을 의미한다. (non-nullabe)
+- 대괄호 ([]): 배열을 의미한다.
+
+### Mutation과 Subscription
+
+<Toggle summary="쿼리 / 뮤테이션">
+
+요청하는 쿼리문의 구조와 응답 내용의 구조는 거의 일치한다.
+
+쿼리문
+
+```gql
+{
+  hero {
+    name
+  }
+}
+```
+
+응답 데이터
+
+```gql
+{
+  "data": {
+    "hero": {
+      "name": "aaa"
+    }
+  }
+}
+```
+
+</Toggle>
+
+- **Query**: 데이터를 가져오는 요청 (`GET`)
+- **Mutation**: 데이터를 변경하는 요청 (`POST`, `PUT`, `DELETE`)
+- **Subscription**: 실시간 데이터 업데이트 (WebSocket 활용)
+
+<SpeechBubble text="Tanstack Query의 Query, Mutation 개념과 비슷한 것 같다." />
+
+### 리졸버(resolver)
+
+gql에서는 데이터를 가져오는 구체적인 과정을 직접 구현 해야 한다. gql 쿼리문 파싱은 대부분의 gql 라이브러리에서 처리하지만, gql에서 데이터를 가져오는 구체적인 과정은 `resolver`가 담당하고 있다.
+
+```gql
+type Query {
+  user(id: ID!): User
+}
+
+type User {
+  id: ID!
+  name: String!
+  email: String!
+}
+```
+
+리졸버 코드 예시 (Node.js, Apollo Server)
+
+```ts
+const resolvers = {
+  Query: {
+    user: (_, { id }) => {
+      return users.find((user) => user.id === id);
+    },
+  },
+};
+```
+
+리졸버는 요청을 받아서 실제 데이터를 반환하는 함수이다.
+Query에서 `user(id: 1)`을 요청하면, `user 리졸버`가 실행되어 데이터를 반환한다.
+
+<SpeechBubble text="리졸버는 필드 요청이 들어온 경우 그 값을 제공하는 역할이고 필드마다 리졸버가 모두 있어야 하는 것 같다." />
+
+## 장단점
+
+### 장점
+
+- 불푤요한 데이터 요청이 없고 네트워크 효율성이 높음
+- 클라이언트가 원하는 데이터만 요청 가능
+- API 버전 관리 필요가 없음 (스키마 확장 방식으로 해결 가능)
+- 실시간 데이터 업데이트 가능 (Subscription)
+
+### 단점
+
+- 캐싱이 어렵다 (RESTful API처럼 URL 기반 캐싱이 불가능하다.)
+
+<SpeechBubble text="REST API에서는 고정된 엔드포인트가 있어서 CDN이나 브라우저 캐싱이 가능하지만 GraphQL은 요청마다 쿼리 내용이 달라질 수 있어 URL 기반 캐싱이 어렵다." />
+
+- 러닝 커브가 있다 (스키마 설계 및 쿼리 최적화가 필요하다.)
+- 서버 부하가 증가할 가능성이 있다 (잘못된 쿼리 작성 시 성능 문제 발생 가능)
+
+<hr />
+
+### 참고
+
+[GraphQL 공식문서](https://graphql.org/learn/)
+
+[카카오스타일 기술 블로그 - 리졸버](https://devblog.kakaostyle.com/ko/2022-11-09-1-understanding-graphql-3-understanding-resolver/)
+
+[카카오 기술블로그 - GraphQL 개념](https://tech.kakao.com/posts/364)
+
+[AWS - GraphQL과 REST의 차이점](https://aws.amazon.com/ko/compare/the-difference-between-graphql-and-rest/)
