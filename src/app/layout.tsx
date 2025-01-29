@@ -8,7 +8,7 @@ import { Footer } from '@/widgets/Footer';
 import { Header } from '@/widgets/Header';
 
 export const metadata: Metadata = {
-  title: '의진 메모장',
+  title: '의진 블로그',
   description: '프론트엔드와 관련된 학습 내용을 다루고 있습니다.',
 };
 
@@ -26,6 +26,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ko" className={pretendard.variable}>
+      <head>
+        <meta
+          name="google-site-verification"
+          content="xj3BeSGvnx51FL-x8wAypHsy3txgL18YIMbC9bk05JY"
+        />
+      </head>
       <body
         className={`bg-beige-100 font-pretendard antialiased dark:bg-black`}
       >
