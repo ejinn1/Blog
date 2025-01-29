@@ -5,13 +5,7 @@ import remarkFrontmatter from 'remark-frontmatter';
 import remarkGfm from 'remark-gfm';
 import remarkMdxFrontmatter from 'remark-mdx-frontmatter';
 
-const nextConfig: NextConfig = {
-  /* config options here */
-  pageExtensions: ['js', 'jsx', 'md', 'mdx', 'ts', 'tsx'],
-};
-
 const withMDX = createMDX({
-  // Add markdown plugins here, as desired
   options: {
     remarkPlugins: [
       remarkGfm,
@@ -22,4 +16,16 @@ const withMDX = createMDX({
   },
 });
 
-export default withMDX(nextConfig);
+const nextConfig: NextConfig = withMDX({
+  pageExtensions: ['js', 'jsx', 'md', 'mdx', 'ts', 'tsx'],
+  webpack(config) {
+    config.module.rules.push({
+      test: /\.svg$/i,
+      issuer: /\.[jt]sx?$/,
+      use: ['@svgr/webpack'],
+    });
+    return config;
+  },
+});
+
+export default nextConfig;
