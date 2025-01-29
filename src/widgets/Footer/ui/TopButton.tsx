@@ -1,8 +1,8 @@
 'use client';
 
-import Image from 'next/image';
-
 import { useTopRefStore } from '../model/useTopRefStore';
+
+import ArrowUp from '@/shared/svg/ic-arrow-up.svg';
 
 const TopButton = () => {
   const { topRef } = useTopRefStore();
@@ -18,14 +18,9 @@ const TopButton = () => {
   return (
     <button
       onClick={scrollToTop}
-      className="flex-center size-32 rounded-md bg-gray-100 text-gray-900 transition-colors duration-300 dark:bg-gray-400"
+      className="flex-center size-32 rounded-md bg-gray-100 text-black transition-colors duration-300 dark:bg-black dark:text-gray-300 dark:hover:text-gray-200"
     >
-      <Image
-        src="/svg/ic-arrow-up.svg"
-        width={30}
-        height={30}
-        alt="top button"
-      />
+      <ArrowUp />
     </button>
   );
 };

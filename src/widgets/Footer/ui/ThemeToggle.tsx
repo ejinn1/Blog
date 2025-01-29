@@ -1,12 +1,24 @@
 'use client';
 
 import useTheme from 'next-theme';
-import Image from 'next/image';
 import { useEffect, useState } from 'react';
+
+import DarkIcon from '@/shared/svg/ic-dark.svg';
+import LightIcon from '@/shared/svg/ic-light.svg';
+import MonitorIcon from '@/shared/svg/ic-monitor.svg';
+import { cn } from '@/shared/util/className';
 
 const ThemeToggle = () => {
   const { theme, setTheme } = useTheme();
+
   const [mounted, setMounted] = useState(false);
+  const [clicked, setClicked] = useState<'class' | 'system'>('class');
+
+  const buttonClass = (value: 'class' | 'system') =>
+    cn(
+      'rounded-md bg-gray-100 p-4 text-black transition-colors-base dark:bg-black dark:text-gray-300 dark:hover:text-gray-200',
+      clicked === value && '!text-gray-200',
+    );
 
   useEffect(() => {
     setMounted(true);
@@ -17,33 +29,22 @@ const ThemeToggle = () => {
   return (
     <>
       <button
-        className="rounded-md bg-gray-100 p-4 text-gray-900 transition-colors duration-300 dark:bg-gray-400 dark:text-gray-100"
-        onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+        className={buttonClass('class')}
+        onClick={() => {
+          setTheme(theme === 'dark' ? 'light' : 'dark');
+          setClicked('class');
+        }}
       >
-        {theme === 'dark' ? (
-          <Image
-            src="/svg/ic-dark.svg"
-            width={24}
-            height={24}
-            alt="dark mode button"
-          />
-        ) : (
-          <Image
-            src="/svg/ic-light.svg"
-            width={24}
-            height={24}
-            alt="light mode button"
-          />
-        )}
+        {theme === 'dark' ? <DarkIcon /> : <LightIcon />}
       </button>
-      <button className="rounded-md bg-gray-100 p-4 text-gray-900 transition-colors duration-300 dark:bg-gray-400 dark:text-gray-100">
-        <Image
-          src="/svg/ic-monitor.svg"
-          width={24}
-          height={24}
-          alt="dark mode button"
-          onClick={() => setTheme('system')}
-        />
+      <button
+        onClick={() => {
+          setTheme('system');
+          setClicked('system');
+        }}
+        className={buttonClass('system')}
+      >
+        <MonitorIcon />
       </button>
     </>
   );
