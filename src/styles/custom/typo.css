@@ -3,11 +3,11 @@
 }
 
 .prose code:not(pre code) {
-  @apply bg-gray-100 text-gray-400 p-2 rounded text-13;
+  @apply bg-gray-100 text-gray-400 p-2 rounded text-13 mx-2;
 }
 
 .dark .prose code:not(pre code) {
-  @apply bg-gray-200 text-gray-400 p-2 rounded text-13;
+  @apply bg-gray-200 text-black p-2 rounded text-13 mx-2;
 }
 
 .prose code::before,
