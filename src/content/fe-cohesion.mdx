@@ -1,0 +1,399 @@
+---
+title: '변경하기 쉬운 코드 - 응집도'
+description: '프론트엔드 코드에서의 응집도는 무엇일까?'
+date: '2025-01-31'
+category: 'Frontend'
+keywords: '응집도'
+---
+
+import Toggle from '@/shared/ui/Toggle.tsx';
+import SpeechBubble from '@/shared/ui/SpeechBubble.tsx';
+
+## 응집도
+
+응집도가 높은 코드는 코드의 한 부분을 수정해도 의도치 않게 다른 부분에서 오류가 발생하지 않는다.
+
+> 응집도를 높히려면
+
+<Toggle summary="함께 수정되는 파일을 같은 디렉토리에 두기">
+
+[함께 수정되는 파일을 같은 디렉토리에 두기](https://frontend-fundamentals.com/code/examples/code-directory.html)
+
+함께 수정되는 소스 파일을 하나의 디렉토리에 배치하면 코드의 의존 관계를 명확하게 드러낼 수 있다.
+참조하면 안 되는 파일을 함부로 참조하는 것을 막고, 연관된 파일들을 한 번에 삭제할 수 있다.
+
+```text
+└─ src
+   ├─ components
+   ├─ constants
+   ├─ containers
+   ├─ contexts
+   ├─ remotes
+   ├─ hooks
+   ├─ utils
+   └─ ...
+```
+
+파일을 종류별로 나누면 어떤 코드가 어떤 코드를 참조하는지 쉽게 확인할 수 없다.
+
+더 이상 특정 컴포넌트나 Hook, 유틸리티 함수가 사용되지 않아서 석제된다고 했을 때, 연관된 코드가 함께 삭제되지 못해서 사용되지 않는 코드가 남아있게 될 수 있다.
+
+```txt
+└─ src
+   │  // 전체 프로젝트에서 사용되는 코드
+   ├─ components
+   ├─ containers
+   ├─ hooks
+   ├─ utils
+   ├─ ...
+   │
+   └─ domains
+      │  // Domain1에서만 사용되는 코드
+      ├─ Domain1
+      │     ├─ components
+      │     ├─ containers
+      │     ├─ hooks
+      │     ├─ utils
+      │     └─ ...
+      │
+      │  // Domain2에서만 사용되는 코드
+      └─ Domain2
+            ├─ components
+            ├─ containers
+            ├─ hooks
+            ├─ utils
+            └─ ...
+```
+
+함께 수정되는 코드 파일을 하나의 디렉토리 아래에 둔다면, 코드 사이의 의존 관계를 파악하기 쉬워진다.
+
+에를 들어 `Domain1`의 하위 코드에서 다른 도메인 (`Doamin2`)의 소스 코드를 참조한다면
+
+```ts
+import { useFoo } '../../../Domain2/hooks/useFoo'
+```
+
+이런 import 문을 만난다면 잘못된 파일을 참조하고 있다는 것을 쉽게 인지할 수 있다.
+
+또한, 특정 기능과 관련된 코드를 삭제할 때 한 디렉토리 전체를 삭제하면 깔끔하게 모든 코드가 삭제되므로 프로젝트 내부에 더 이상 사용되지 않는 코드가 없도록 할 수 있다.
+
+<SpeechBubble text="FSD 아키텍처를 적용시키면 이 내용들을 만족시킬 수 있을 것 같다." />
+
+</Toggle>
+
+<Toggle summary="매직 넘버 없애기">
+
+[매직 넘버 없애기](https://frontend-fundamentals.com/code/examples/magic-number-cohesion.html)
+
+이 코드는 좋아요 버튼을 눌렀을 때 좋아요 개수를 새로 내려받는 함수이다.
+
+```ts
+async function onLikeClick() {
+  await postLike(url);
+  await delay(300);
+  await refetchPostLike();
+}
+```
+
+`300`이라는 숫자를 애니메이션 완료를 기다리려고 사용했다면, 재생하는 애니메이션을 바꿨을 때 조용히 서비스가 깨질 수 있는 위험성이 있다.
+
+이 Hook은 가독성의 [매직 넘버 이름 붙이기](https://frontend-fundamentals.com/code/examples/magic-number-readability.html) 내용으로 볼 수 있다.
+
+숫자 `300`의 맥락을 정확하게 표시하기 위해서 상수 `ANIMATION_DELAY_MS`로 선언할 수 있다.
+
+```ts
+const ANIMATION_DELAY_MS = 300;
+
+async function onLikeClick() {
+  await postLike(url);
+  await delay(ANIMATION_DELAY_MS);
+  await refetchPostLike();
+}
+```
+
+</Toggle>
+
+<Toggle summary="폼의 응집도 생각하기">
+
+[폼의 응집도 생각하기](https://frontend-fundamentals.com/code/examples/form-fields.html)
+
+Form으로 사용자에게 값을 입력받아야 하는 경우가 많다.
+Form을 관리할 때는 2가지의 방법으로 응집도를 괸리해서, 함께 수정되어야 할 코드가 함께 수정되도록 할 수 있다.
+
+**필드 단위 응집도**
+
+필드 단위 응집은 개별 입력 요소를 독립적으로 관리하는 방식이다.
+
+- **각 필드가 고유의 검증 로직을 가짐**: 특정 필드의 유지모수가 쉬워진다.
+- **필드 단위 응집도를 고려하여 설계**: 각 필드의 검증 로직이 독립적이어서 다른 필드에 영향을 주지 않는다.
+
+```ts
+import { useForm } from "react-hook-form";
+
+export function Form() {
+  const {
+    register,
+    formState: { errors },
+    handleSubmit
+  } = useForm({
+    defaultValues: {
+      name: "",
+      email: ""
+    }
+  });
+
+  const onSubmit = handleSubmit((formData) => {
+    // 폼 데이터 제출 로직
+    console.log("Form submitted:", formData);
+  });
+
+  return (
+    <form onSubmit={onSubmit}>
+      <div>
+        <input
+          {...register("name", {
+            validate: (value) =>
+              isEmptyStringOrNil(value) ? "이름을 입력해주세요." : ""
+          })}
+          placeholder="이름"
+        />
+        {errors.name && <p>{errors.name.message}</p>}
+      </div>
+
+      <div>
+        <input
+          {...register("email", {
+            validate: (value) => {
+              if (isEmptyStringOrNil(value)) {
+                return "이메일을 입력해주세요.";
+              }
+
+              if (!/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(value)) {
+                return "유효한 이메일 주소를 입력해주세요.";
+              }
+
+              return "";
+            }
+          })}
+          placeholder="이메일"
+        />
+        {errors.email && <p>{errors.email.message}</p>}
+      </div>
+
+      <button type="submit">제출</button>
+    </form>
+  );
+}
+
+function isNil(value: unknown): value is null | undefined {
+  return value == null;
+}
+
+type NullableString = string | null | undefined;
+
+function isEmptyStringOrNil(value: NullableString): boolean {
+  return isNil(value) || value.trim() === "";
+}
+```
+
+**폼 전체 단위 응집도**
+
+폼 전체 응집은 모든 필드의 검증 로직이 폼에 종속되는 방식이다.
+
+- **폼 전체 응집도가 높아짐**: 폼 전체의 검증이 한 곳에서 관리되어 로직이 간결해진다.
+- **상태가 중앙 집중식으로 관리됨**: 폼 전체 흐름을 이해하기 쉬워진다.
+- **필드 간의 결합도가 높아짐**: 폼의 재사용성은 떨어질 수 있다.
+
+```ts
+import * as z from "zod";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+
+const schema = z.object({
+  name: z.string().min(1, "이름을 입력해주세요."),
+  email: z
+    .string()
+    .min(1, "이메일을 입력해주세요.")
+    .email("유효한 이메일 주소를 입력해주세요.")
+});
+
+export function Form() {
+  const {
+    register,
+    formState: { errors },
+    handleSubmit
+  } = useForm({
+    defaultValues: {
+      name: "",
+      email: ""
+    },
+    resolver: zodResolver(schema)
+  });
+
+  const onSubmit = handleSubmit((formData) => {
+    // 폼 데이터 제출 로직
+    console.log("Form submitted:", formData);
+  });
+
+  return (
+    <form onSubmit={onSubmit}>
+      <div>
+        <input {...register("name")} placeholder="이름" />
+        {errors.name && <p>{errors.name.message}</p>}
+      </div>
+
+      <div>
+        <input {...register("email")} placeholder="이메일" />
+        {errors.email && <p>{errors.email.message}</p>}
+      </div>
+
+      <button type="submit">제출</button>
+    </form>
+  );
+}
+```
+
+### 필드 단위 vs 폼 전체 단위 **응집도**
+
+**필드 단위**
+
+- **독립적인 검증이 필요할 때**: 이메일 형식 검사, 전화번호 유효성 검증, 아이디 중복 확인, 추천 코드 유효성 확인, 독립적이고 고유한 검증이 필요할 때
+- **재사용이 필요할 때**: 필드와 검증 로직이 다른 폼에서도 동일하게 사용될 수 있는 경우
+
+**폼 전체 단위**
+
+- **단일 기능을 나타낼 때**: 결제 정보, 배송 정보처럼 모든 필드가 하나의 비즈니스 로직을 이룰 때 유용
+- **단계별 입력이 필요할 때**: 회원가입, 설문조사처럼 스텝별로 동작하는 복잡한 폼의 경우
+- **필드 간 의존성이 있을 때**: 비밀번호 확인, 총액 계산처럼 필드간 상호작용이 필요한 경우
+
+</Toggle>
+
+## 글을 읽고 적용시켜보기
+
+<SpeechBubble text="함께 수정되는 파일을 같은 디렉토리에 두기 부분을 리펙토링 할 수 있을 것 같다." />
+
+현재 이 블로그의 파일 구조는 FSD(Folder-Sliced Design) 구조를 따라서 만들고 있다. 기존 사용하고 있던 `PostContainer` 컴포넌트의 응집도를 높히고, 독립적으로 동작할 수 있도록 개선한 과정이다.
+
+### 기존 파일 구조
+
+```
+└─ src
+   ├─ app
+   ├─ entities
+   ├─ features
+   ├─ shared
+   ├─ styles
+   ├─ widgets
+   └─ ...
+```
+
+`widgets` 폴더 안에 `PostContainer` 컴포넌트는 `posts` 데이터를 `props`로 받아와 `useFilterPost`함수로 필터링한 후 출력하는 구조였다.
+
+```tsx
+'use client';
+
+import Post from '@/entities/post/ui/Post';
+import { useFilterPost } from '@/features/post/util/useFilterPost';
+import { CustomMetadata } from '@/shared/types/meta';
+
+interface PostContainerProps {
+  posts: {
+    slug: string;
+    meta: CustomMetadata;
+  }[];
+}
+
+const PostContainer = ({ posts }: PostContainerProps) => {
+  const filterdPosts = useFilterPost({ posts });
+
+  return (
+    <div className="flex w-full flex-col flex-wrap gap-8">
+      {filterdPosts.map((post) => (
+        <Post key={post.slug} slug={post.slug} meta={post.meta} />
+      ))}
+    </div>
+  );
+};
+
+export default PostContainer;
+```
+
+### 문제점 및 개선 방향
+
+- **`PostContainer`의 의존성**:`PostContainer`는 데이터에 의존하기보다는 독립적으로 동작할 수 있어야한다.
+- **응집도 문제**:`PostContainer`에서 필터링 하는 함수가 다른 폴더에 있어서 응집도의 문제가 있다.
+
+### 리펙토링 과정
+
+- **독립적인 컴포넌트로 변경**:`PostContainer`는 `props`로 받지 않고 직접 데이터를 가져오는 방식으로 수정하였다.
+- **컴포넌트 구분**: `PostContainer`를 `PostSection`으로 변경하여 데이터를 가져오는 부분과 필터링하는 부분을 나누었다.
+
+### 최종 구조
+
+```
+└─ widgets
+   ├─ PostSection
+      ├─ ui
+        ├─ PostContainer.tsx
+        ├─ PostSection.tsx
+        └─ ...
+      ├─ model
+        ├─ useFilteredPosts.ts
+        └─ ...
+   └─ ...
+```
+
+**PostSection**
+
+```tsx
+import PostContainer from './PostContainer';
+
+import { getAllPosts } from '@/entities/post/model/getAllPosts';
+
+const PostSection = async () => {
+  const posts = await getAllPosts();
+
+  return (
+    <section
+      aria-labelledby="posts-list"
+      className="relative flex justify-between"
+    >
+      <PostContainer posts={posts} />
+    </section>
+  );
+};
+
+export default PostSection;
+```
+
+**PostContainer**
+
+```tsx
+import Post from '@/entities/post/ui/Post';
+import { CustomMetadata } from '@/shared/types/meta';
+
+interface PostContainerProps {
+  posts: {
+    slug: string;
+    meta: CustomMetadata;
+  }[];
+}
+
+const PostContainer = ({ posts }: PostContainerProps) => {
+  return (
+    <div className="flex w-full flex-col flex-wrap gap-8">
+      {posts.map((post) => (
+        <Post key={post.slug} slug={post.slug} meta={post.meta} />
+      ))}
+    </div>
+  );
+};
+
+export default PostContainer;
+```
+
+### 결론
+
+- **응집도 개선**: **postSection**과 관련된 내용을 `/widgets/PostSection`안으로 한번에 관리할 수 있게 되었다.
+- **컴포넌트 분리**: `PostContainer`와 `PostSection`으로 구분하여 응집도를 높였다.
+- **FSD 구조 이해 향상**: `widgets`안의 컴포넌트는 독립적인 컴포넌트로 어디에서 사용해도 사용이 가능하도록 해야되는데 그 부분을 충족시킨 것 같다.
