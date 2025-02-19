@@ -4,7 +4,6 @@ import localFont from 'next/font/local';
 
 import CustomThemeProvider from '@/shared/provider/CustomThemeProvider';
 import ScrollProvider from '@/shared/provider/ScrollProvider';
-import { Footer } from '@/widgets/Footer';
 import { Header } from '@/widgets/Header';
 
 export const metadata: Metadata = {
@@ -39,7 +38,6 @@ export default function RootLayout({
           <ScrollProvider>
             <Header />
             <main className="flex-center grow">{children}</main>
-            <Footer />
           </ScrollProvider>
         </CustomThemeProvider>
       </body>
