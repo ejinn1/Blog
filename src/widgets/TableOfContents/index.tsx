@@ -1,1 +1,1 @@
-export { default } from './ui/TableOfContnets';
+export { default } from './ui/TableOfContents';
