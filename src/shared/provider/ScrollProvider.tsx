@@ -2,7 +2,7 @@
 
 import { ReactNode, useEffect, useRef } from 'react';
 
-import { useTopRefStore } from '@/widgets/Footer/model/useTopRefStore';
+import { useTopRefStore } from '@/widgets/TableOfContents/model/useTopRefStore';
 
 const ScrollProvider = ({ children }: { children: ReactNode }) => {
   const { setTopRef } = useTopRefStore();

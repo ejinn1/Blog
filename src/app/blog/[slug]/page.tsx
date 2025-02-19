@@ -8,13 +8,13 @@ import BlogHeader from '@/widgets/BlogHeader';
 import TableOfContents from '@/widgets/TableOfContents';
 
 interface BlogPageProps {
-  params: { slug: string };
+  params: Promise<{ slug: string }>;
 }
 
 export async function generateMetadata({
   params,
 }: BlogPageProps): Promise<Metadata> {
-  const slug = params.slug;
+  const slug = (await params).slug;
   const { meta } = (await import(`@/content/${slug}.mdx`)) as {
     meta: CustomMetadata;
   };
@@ -34,7 +34,7 @@ export async function generateMetadata({
 }
 
 export default async function BlogPage({ params }: BlogPageProps) {
-  const slug = params.slug;
+  const slug = (await params).slug;
   const { default: Content, meta } = (await import(
     `@/content/${slug}.mdx`
   )) as {
