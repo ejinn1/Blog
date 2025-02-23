@@ -7,6 +7,7 @@ import TopButton from './TopButton';
 
 const TableOfContents = () => {
   const [headings, setHeadings] = useState<TocItem[]>([]);
+  const [activeId, setActiveId] = useState<string>('');
 
   const handleClick = (e: React.MouseEvent<HTMLAnchorElement>, id: string) => {
     e.preventDefault();
@@ -25,7 +26,30 @@ const TableOfContents = () => {
     }));
 
     setHeadings(items);
+    setActiveId(items[0].id);
   }, []);
+
+  useEffect(() => {
+    const callback = (entries: IntersectionObserverEntry[]) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          setActiveId(entry.target.id);
+        }
+      });
+    };
+
+    const observer = new IntersectionObserver(callback, {
+      rootMargin: '-64px 0px -80% 0px',
+      threshold: 0.1,
+    });
+
+    const elements = document.querySelectorAll('h2, h3');
+    elements.forEach((elem) => observer.observe(elem));
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [headings]);
 
   return (
     <div className="sticky top-100 ml-20 mt-20 hidden h-max w-230 rounded-12 bg-beige-300 dark:bg-gray-400/20 lg:block">
@@ -38,11 +62,11 @@ const TableOfContents = () => {
             <li
               key={heading.id}
               style={{ paddingLeft: `${(heading.level - 1) * 1}rem` }}
-              className="transition-colors-base hover:text-green-400 dark:hover:text-green-200"
             >
               <a
                 href={`#${heading.id}`}
                 onClick={(e) => handleClick(e, heading.id)}
+                className={`transition-colors-base block hover:text-green-400 dark:hover:text-green-200 ${activeId === heading.id ? 'font-bold text-green-400 dark:text-green-200' : ''}`}
               >
                 {heading.text}
               </a>
