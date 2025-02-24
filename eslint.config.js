@@ -30,6 +30,7 @@ export default tseslint.config(
       react: react,
       import: importPlugin,
       prettier: prettierPlugin,
+      tailwindcss: tailwind,
     },
     rules: {
       ...reactHooks.configs.recommended.rules,
