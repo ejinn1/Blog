@@ -1,55 +1,20 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-
-import { TocItem } from '../model/types';
+import { useToc } from '../model/useToc';
 import TopButton from './TopButton';
 
+import { cn } from '@/shared/util/className';
+
 const TableOfContents = () => {
-  const [headings, setHeadings] = useState<TocItem[]>([]);
-  const [activeId, setActiveId] = useState<string>('');
+  const { headings, activeId, handleClickHeading } = useToc();
 
-  const handleClick = (e: React.MouseEvent<HTMLAnchorElement>, id: string) => {
-    e.preventDefault();
-    const element = document.getElementById(id);
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth' });
-    }
-  };
-
-  useEffect(() => {
-    const elements = document.querySelectorAll('h2, h3');
-    const items: TocItem[] = Array.from(elements).map((element) => ({
-      id: element.id,
-      text: element.textContent || '',
-      level: Number(element.tagName.charAt(1)),
-    }));
-
-    setHeadings(items);
-    setActiveId(items[0].id);
-  }, []);
-
-  useEffect(() => {
-    const callback = (entries: IntersectionObserverEntry[]) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          setActiveId(entry.target.id);
-        }
-      });
-    };
-
-    const observer = new IntersectionObserver(callback, {
-      rootMargin: '-64px 0px -80% 0px',
-      threshold: 0.1,
-    });
-
-    const elements = document.querySelectorAll('h2, h3');
-    elements.forEach((elem) => observer.observe(elem));
-
-    return () => {
-      observer.disconnect();
-    };
-  }, [headings]);
+  const tocClassName = (id: string) =>
+    cn(
+      'rounded-4 px-4 transition-all duration-300 ease-in-out',
+      activeId === id
+        ? 'text-[13.5px] font-bold text-green-400 dark:text-green-200'
+        : 'hover:bg-green-200/30 dark:hover:bg-green-200/20 dark:hover:text-gray-100',
+    );
 
   return (
     <div className="sticky top-100 ml-20 mt-20 hidden h-max w-230 rounded-12 bg-beige-300 dark:bg-gray-400/20 lg:block">
@@ -65,8 +30,8 @@ const TableOfContents = () => {
             >
               <a
                 href={`#${heading.id}`}
-                onClick={(e) => handleClick(e, heading.id)}
-                className={`transition-colors-base block hover:text-green-400 dark:hover:text-green-200 ${activeId === heading.id ? 'font-bold text-green-400 dark:text-green-200' : ''}`}
+                onClick={(e) => handleClickHeading(e, heading.id)}
+                className={tocClassName(heading.id)}
               >
                 {heading.text}
               </a>
