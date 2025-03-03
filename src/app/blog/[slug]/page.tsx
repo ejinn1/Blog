@@ -20,7 +20,7 @@ export async function generateMetadata({
   };
 
   return {
-    title: meta.title,
+    title: meta.title + ' | 의진 블로그',
     description: meta.description,
     category: meta.category,
     keywords: meta.keywords,
