@@ -21,77 +21,1223 @@ Frontend Fundamentals라는 토스에서 만든 FE 코드 지침서를 읽었다
 
 가독성이 좋은 코드는 읽기 쉬운 코드라는 뜻이다.
 
-<SpeechBubble text="개인적으로 가독성이 좋은 코드를 작성하는 것이 정말 중요하다고 생각한다." />
 > 가독성을 높이려면
 
-- **맥락 줄이기**
+**맥락 줄이기**
 
-  - 같이 실행되지 않는 코드를 분리하기
-  - 구현 상세 추상화하기
-  - 로직 종류에 따라 합쳐진 함수 쪼개기
+<Toggle summary="같이 실행되지 않는 코드를 분리한다.">
 
-- **이름 붙이기**
+[같이 실행되지 않는 코드 분리하기](https://frontend-fundamentals.com/code/examples/submit-button.html)
 
-  - 복잡한 조건에 이름 붙이기
-  - 매직 넘버에 이름 붙이기
+이 글의 중요 내용은 함수나 컴포넌트가 동시에 실행하지 않는 코드의 분리에 대한 것이다.
 
-- **위에서 아래로 읽히게 하기**
-  - 시점 이동 줄이기
-  - 삼항 연산자 단순하게 하기
+```ts
+function SubmitButton() {
+  const isViewer = useRole() === "viewer"
+
+  useEffect(() => {
+    if (isViewer) {
+      return
+    }
+    showButtonAnimation()
+  }, [isViewer])
+
+  return isViewer ? (
+    <TextButton disabled>Submit</TextButton>
+  ) : (
+    <Button type="submit">Submit</Button>
+  )
+}
+```
+
+이렇게 컴포넌트를 분리하여 나타낼 수 있다.
+
+```ts
+function SubmitButton() {
+  const isViewer = useRole() === "viewer"
+
+  return isViewer ? <ViewerSubmitButton /> : <AdminSubmitButton />
+}
+```
+
+하나의 컴포넌트가 동시에 실행하지 않는 여러개의 역할을 담당하고 있다면 각각의 역할에 따라 컴포넌트로 분리하여 다른 사람이 이 코드를 봤을 때 어떤 역할을 담당하고 있는지 이해하기 쉽게 작성해야한다.
+
+</Toggle>
+
+<Toggle summary="구현 상세 추상화하기">
+
+[구현 상세 추상화하기](https://frontend-fundamentals.com/code/examples/login-start-page.html)
+
+이 글의 중요 내용은 한 사람이 코드를 읽을 때 가지고 있는 맥락이 너무 많다면 이해하기가 어렵다는 것이다.
+
+```ts
+function LoginStartPage() {
+  useCheckLogin({
+    onChecked: (status) => {
+      if (status === 'LOGGED_IN') {
+        location.href = '/home';
+      }
+    },
+  });
+
+  // ...
+}
+```
+
+이 코드는 로그인을 확인하고 로그인이 되어있다면 사용자를 홈으로 보내는 로직이다.
+이러한 로직이 추상화 없이 작성되었을 때 `useCheckLogin`, `onChecked`, `status`, `"LOGGED_IN"`을 모두 읽어야 이해가 가능하다.
+
+**1. Wrapper 컴포넌트 사용하기**
+
+Wrapper 컴포넌트를 만들어 페이지를 감싸면 복잡성을 줄일 수 있다.
+
+```ts
+function App() {
+  return (
+    <AuthGuard>
+      <LoginStartPage />
+    </AuthGuard>
+  );
+}
+
+function AuthGuard({ children }) {
+  const status = useCheckLoginStatus();
+
+  useEffect(() => {
+    if (status === 'LOGGED_IN') {
+      location.href = '/home';
+    }
+  }, [status]);
+
+  return status !== 'LOGGED_IN' ? children : null;
+}
+```
+
+**2. HOC (Higher-Order Component) 사용하기**
+
+`고차 컴포넌트리는 개념을 처음 알게되었다.`
+
+```ts
+export default withAuthGuard(LoginStartPage)
+
+function withAuthGuard(WrappedComponent) {
+  return function AuthGuard(props) {
+    const status = useCheckLoginStatus()
+
+    useEffect(() => {
+      if(status === "LOGGED_IN"){
+        location.href = "/home"
+      }
+    }, [status])
+
+    return status !== "LOGGED_IN" ? <WrappedComponent {...props} /> : null
+  }
+}
+```
+
+> HOC 컴포넌트는 컴포넌트 로직을 재사용하기 위한 기술이다.
+> 고차 컴포넌트는 컴포넌트를 가져와 새 컴포넌트를 반환하는 함수이다.  
+> [리액트 공식문서](https://ko.legacy.reactjs.org/docs/higher-order-components.html)
+
+**코드에서 추상화**
+
+구현 상세를 지나치게 드러내기보단 작은 단위로 추상화 시키는 것이 코드가 어떤 역할을 하는지 정확하기 파악하기 쉬워진다.
+
+</Toggle>
+
+<Toggle summary="로직 종류에 따라서 합쳐진 함수 쪼개기">
+
+[로직 종류에 따라 찹혀진 함수 쪼개기](https://frontend-fundamentals.com/code/examples/use-page-state-readability.html)
+
+이 글의 중요 내용은 `쿼리 파라미터`, `상태`, `API 호출`괴 같은 로직의 종류에 따라서 함수나 컴포넌트, hook을 만들게 되면 한 번에 다루는 맥락의 종류가 많아져 이해하기 어렵다는 것이다.
+
+<hr />
+
+예를 들어 `usePageState()`라는 hook이 페이지 전체의 URL 쿼리 파라미터를 한 번에 관리한다면
+hook이 담당하고 있는 영역이 넓어지면서, 구현이 길어지고, 어떤 역할을 하는 hook인지 파악하기 힘들어진다.
+
+또한 hook이 관리하고 있는 쿼리 파라미터 하나가 수정되더라도 리렌더링이 발생하게 된다.
+
+- `cardId`를 쿼리 파라미터로 하는 hook을 따로 분리해서 만들 수 있다.
+
+  ```ts
+  export function useCardIdQueryParam() {
+    const [cardId, _setCardId] = useQueryParam('cardId', NumberParam);
+
+    const setCardId = useCallback((cardId: number) => {
+      _setCardId({ cardId }, 'repaceIn');
+    }, []);
+
+    return [cardId ?? undefined, setCardId] as const;
+  }
+  ```
+
+> 좋은 성능을 위해서는 특정한 상태 값이 업데이트되었을 때 최소한의 부분이 리렌더링 되도록 설계해야한다.
+
+</Toggle>
+
+**이름 붙이기**
+
+<Toggle summary="복잡한 조건에 이름 붙이기">
+
+[복잡한 조건에 이름 붙이기](https://frontend-fundamentals.com/code/examples/condition-name.html)
+
+이 글의 중요 내용은 복잡한 조건식에 이름을 붙히지 않으면 이해하기 어렵다는 것이다.
+
+<hr />
+
+이 코드는 상품 중에서 카테고리와 가격 범위가 일치하는 상품만 필터링 하는 로직이다.
+
+```ts
+const result = products.filter((product) =>
+  product.categories.some(
+    (category) =>
+      category.id === targetCategory.id &&
+      product.prices.some((price) => price >= minPrice && price <= maxPrice),
+  ),
+);
+```
+
+`filter`, `some`, `&&`같은 로직이 여러번 중첩되어 있어서 정확하게 파악하기 어렵다.
+
+```ts
+const matchedProducts = products.filter((product) => {
+  return product.categories.some((category) => {
+    const isSameCategory = category.id === targetCategory.id;
+    const isPriceInRange = product.prices.some(
+      (price) => price >= minPrice && price <= maxPrice,
+    );
+
+    return isSameCategory && isPriceInRange;
+  });
+});
+```
+
+명시적으로 조건을 명확히 나타내면 파악하기 쉬워진다.
+
+</Toggle>
+
+<Toggle summary="매직 넘버에 이름 붙이기">
+
+[매직 넘버에 이름 붙이기](https://frontend-fundamentals.com/code/examples/magic-number-readability.html)
+
+매직 넘버라는 것은 정확한 뜻을 밝히기 않고 소스 코드 안에 직접 숫자 값을 넣는 것이다.
+
+<hr />
+
+예시로 `Not Found`는 HTTP 상태 코드로 `404`값을 바로 사용하는 것이 있다.
+
+```ts
+async function onLikeClick() {
+  await postLike(url);
+  await delay(300);
+  await refetchPostLike();
+}
+```
+
+`delay`안의 `300`이라는 값이 어떠한 맥락으로 사용되었는지 알 수 없다.
+
+```ts
+const ANIMATION_DELAY_MS = 300;
+
+async function onLikeClick() {
+  await postLike(url);
+  await delay(ANIMATION_DELAY_MS);
+  await refetchPostLike();
+}
+```
+
+이렇게 상수로 선언해서 맥락 표현을 정확하게 하면 이해하기 쉬워진다.
+
+</Toggle>
+
+**위에서 아래로 읽히게 하기**
+
+<Toggle summary="시점 이동 줄이기">
+
+[시점 이동 줄이기](https://frontend-fundamentals.com/code/examples/user-policy.html)
+
+코드를 읽을 때 위에서 아래로, 하나의 함수나 파일에서 읽을 수 있도록 코드를 작성하면 동작을 파악하기 쉬워진다.
+
+<hr />
+
+**조건을 한눈에 볼 수 있는 객체로 만들기**
+
+```ts
+function Page() {
+  const user = useUser()
+  const policy = {
+    admin: {canInvite: true, canView: true},
+    viewer: {canInvite: false, canView: true},
+  }[user.role]
+
+  return (
+    <div>
+      <Button disabled={!policy.canInvite}>Invite</Button>
+      <Button disabled={!policy.canView}>View</Button>
+    </div>
+  )
+}
+```
+
+로직을 권한에 따라 객체로 관리하여 시점 이동 없이 한눈에 조건을 파악할 수 있다.
+
+<SpeechBubble text="이 내용은 맥락 줄이기와 비슷한 개념인 것 같다." />
+
+</Toggle>
+
+<Toggle summary="삼항 연산자 단순하게 하기">
+
+[삼항 연산자 단순하게 하기](https://frontend-fundamentals.com/code/examples/ternary-operator.html)
+
+복잡한 삼항 연산자는 조건문으로 풀어서 사용하면 명확하고 간단하게 조건을 드러낼 수 있다.
+
+```ts
+const status = A && B ? 'BOTH' : A || B ? (A ? 'A' : 'B') : 'NONE';
+```
+
+```ts
+const status = (() => {
+  if (A && B) return 'BOTH';
+  if (A) return 'A';
+  if (B) return 'B';
+  return 'NONE';
+})();
+```
+
+</Toggle>
+
+### 글을 읽고 적용해보기
+
+찍찍이 프로젝트에서 맥락이 많다고 생각되는 [최근 등록한 할일](https://github.com/slid-todo/front/blob/main/src/components/Dashboard/RecentTodos/index.tsx) 부분의 요약된 코드이다.
+
+```ts
+'use client';
+
+// import ...
+
+export const RecentTodos = () => {
+  const { todos, isLoading } = useRecentTodosQuery();
+  const { goals } = useGoalsQuery();
+
+  // ...
+
+  return (
+    <DashboardItemContainer title="최근 등록한 할일" className="relative">
+      // ...
+      {isLoading ? (
+        <TodoListSkeleton />
+      ) : goals.length === 0 ? (
+        <Card>
+          새 목표 등록
+        </Card>
+      ) : todos.length === 0 ? (
+        <Card>
+          새 할일 등록
+        </Card>
+      ) : (
+        <ul>
+          {todos.map((todo) => (
+            <BasicTodoItem
+              key={todo.todoId}
+              goalColor={todo.goalColor}
+              goalTitle={todo.goalTitle}
+              todoTitle={todo.todoTitle}
+              todoId={todo.todoId}
+            />
+          ))}
+        </ul>
+      )}
+    </DashboardItemContainer>
+  );
+};
+
+```
+
+가독성에 관한 글을 읽고 내 코드르 보니 한 번에 파악하기 어렵고 맥락도 여러가지가 있는 것 같다.
+
+**1. 같이 실행되지 않는 코드를 분리한다.**
+
+`isLoading`, `goals.length === 0`, `todos.length === 0` 을 분리할 수 있을 것 같다.
+
+**2. 이에 대한 각각 이름을 붙일 수 있다.**
+
+```ts
+const hasGoals = goals.length > 0;
+const hasTodos = todos.length > 0;
+```
+
+**3. 삼항 연산자 단순하게 하기로 시점 이동을 최소화할 수 있다.**
+
+**개선한 코드**
+
+```ts
+const RecentTodos = () => {
+  const { todos, isLoading } = useRecentTodosQuery();
+  const { goals } = useGoalsQuery();
+
+  const hasGoals = goals.length > 0;
+  const hasTodos = todos.length > 0;
+
+  if (isLoading) return <TodoListSkeleton />;
+  if (!hasGoals) return <Card>새 목표 등록</Card>;
+  if (!hasTodos) return <Card>새 할일 등록</Card>;
+
+  return (
+    <DashboardItemContainer title="최근 등록한 할일" className="relative">
+      <ul>
+        {todos.map((todo) => (
+          <BasicTodoItem
+            key={todo.todoId}
+            goalColor={todo.goalColor}
+            goalTitle={todo.goalTitle}
+            todoTitle={todo.todoTitle}
+            todoId={todo.todoId}
+          />
+        ))}
+      </ul>
+    </DashboardItemContainer>
+  );
+};
+
+```
+
+가독성과 맥락을 고려하며 리펙토링 하니까 이전보다 코드가 이해하기 쉬워진 것 같다.
 
 ## 예측 가능성
 
 예측 가능성이 높은 코드는 일관적인 규칙을 따르고, 함수나 컴포넌트의 이름과 파라미터, 반환 값만 보고도 어떤 동작을 하는지 알 수 있어야 한다.
 
+<SpeechBubble text="가독성이 높은 코드와 비슷한 개념이지만 살짝 다른 것 같다. 가독성이 좋은 코드는 읽기 편한 코드이고 예측 가능성이 높은 코드는 읽지 않고도 어떤 역할을 하는지 알 수 있는 코드인 것 같다." />
+
 > 예측 가능성을 높이려면
 
-- 이름 겹치지 않게 관리하기
-- 같은 종류의 함수는 반환 타입 통일하기
-- 숨은 로직 드러내기
+<Toggle summary="이름 겹치지 않게 관리하기" >
+
+[이름 겹치지 않게 관리하기](https://frontend-fundamentals.com/code/examples/http.html)
+
+같은 이름을 가지는 함수나 변수는 동일한 동작을 해야한다.
+
+<hr />
+
+`http`라는 라이브러리를 사용하고, 토큰을 받아오는 로직을 포함시키는 함수를 `http`라고 했을 때,
+
+```ts
+import { http as httpLibrary } from '@library/http';
+
+export const http = {
+  async get(url: string) {
+    const token = await fetchToken();
+
+    return httpLibrary.get(url);
+  },
+};
+```
+
+원래 http 라이브러리가 하는 것처럼 GET 요청을 보내는것으로 예상하지만 `http.get`을 호출할 때 토큰을 받아오는 로직이 포함되어 있는 것을 예상할 수 없다.
+
+```ts
+import { http as httpLibrary } from '@library/http';
+
+export const httpService = {
+  async getWithAuth(url: string) {
+    const token = await fetchToken();
+
+    return httpLibrary.get(url, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+  },
+};
+```
+
+다른 개발자가 이 함수를 사용할 때 새롭게 정의한 함수라는 것을 인지할 수 있고 `getWithAuth`라는 이름으로 인증된 요청을 보낸다는 것을 명확히 전달할 수 있게된다.
+
+</Toggle>
+
+<Toggle summary="같은 종류의 함수는 반환 타입 통일하기">
+
+[같은 종류의 함수는 반환 타입 통일하기](https://frontend-fundamentals.com/code/examples/use-user.html)
+
+같은 종류의 함수나 Hook이 서로 다른 반환 타입을 가지면 코드의 일관성에 떨어져 동료들이 헷갈릴 수 있다.
+
+<hr />
+
+`useUser`와 `useServerTime` Hook은 모두 API 호출과 관련된 Hook이다
+
+```ts
+function useUser() {
+  const query = useQuery({
+    queryKey: ['user'],
+    queryFn: fetchUser,
+  });
+
+  return query;
+}
+
+function useServerTime() {
+  const query = useQuery({
+    queryKey: ['serverTime'],
+    queryFn: fetchServerTime,
+  });
+
+  // return query로 변경
+  return query.data;
+}
+```
+
+`useUser`는 `Query` 객체를 그대로 반환하고 `useServerTime`은 데이터만 반환한다.
+
+같은 종류의 동작을 하는 코드이지만 반환하는 형태가 다르다.
+
+모두 반환하는 값을 `Query` 객체를 반환하도록 수정하면 팀원들이 코드에 대한 예측 가능성을 높일 수 있다.
+
+</Toggle>
+
+<Toggle summary="숨은 로직 드러내기">
+
+[숨은 로직 드러내기](https://frontend-fundamentals.com/code/examples/hidden-logic.html)
+
+함수나 컴포넌트의 이름, 파라미터, 반환 값에 드러나지 않은 숨은 로직이 있으면 팀원들이 동작을 예측하는 데에 어려움을 겪을 수 있다.
+
+<hr />
+
+사용자의 계좌 잔액을 조회하는 코드이다. 함수를 호출할 때마다 `balance_fetched`라는 로깅이 이루어지고 있다.
+
+```ts
+async function fetchBalance(): Promise<number> {
+  const balance = awiat http.get<number>('...')
+
+  logging.log('balance_fetched')
+
+  return balance
+}
+```
+
+`fetchBalance`함수의 이름과 반환 타입만으로는 `balance_fetched`라는 로깅이 이루어지는지 알 수 없다.
+
+따라서 계좌 잔액을 조회하는 함수와 로깅을 하는 코드를 별도로 분리해 반환 타입으로 예측할 수 있는 로직만 구현 부분에 남긴다.
+
+```ts
+async function fetchBalance(): Promise<number> {
+  const balance = await http.get<number>('...')
+
+  return balance
+}
+
+<Button
+  onClick={async () => {
+    const balance = await fetchBalance()
+    logging.log('balance_fetched')
+
+    await syncBalance(balance)
+  }}
+>
+  계좌 잔액 갱신하기
+</Button>
+```
+
+</Toggle>
 
 ## 응집도
 
 응집도가 있는 코드는 코드의 한 부분을 수정해도 의도치 않게 다른 부분에서 오류가 발생하지 않는다.
 함께 수정되어야할 부분이 반드시 함께 수정되도록 구조적으로 설계되어있기 때문이다.
 
-```
-가독성과 응집도는 서로 상충할 수 있다.
-
-일반적으로 응집도를 높이기 위해서는 변수나 함수를 추상화하는 등 가독성을 떨어뜨리는 결정을 하게된다. 함께 수정되지 않으면 오류가 발생할 수 있는 경우에는, 응집도를 우선해서 코드를 공통화, 추상화한다. 위험성이 높지 않은 경우에는, 가독성을 우선하여 코드 중복을 허용한다.
-```
-
 > 응집도를 높이려면
 
-- 함께 수정되는 파일을 같은 디렉토리에 두기
-- 매직 넘버 없애기
-- 폼의 응집도 생각하기
+<Toggle summary="함께 수정되는 파일을 같은 디렉토리에 두기">
 
-### 결합도
+[함께 수정되는 파일을 같은 디렉토리에 두기](https://frontend-fundamentals.com/code/examples/code-directory.html)
+
+함께 수정되는 소스 파일을 하나의 디렉토리에 배치하면 코드의 의존 관계를 명확하게 드러낼 수 있다.
+참조하면 안 되는 파일을 함부로 참조하는 것을 막고, 연관된 파일들을 한 번에 삭제할 수 있다.
+
+<hr />
+
+```text
+└─ src
+   ├─ components
+   ├─ constants
+   ├─ containers
+   ├─ contexts
+   ├─ remotes
+   ├─ hooks
+   ├─ utils
+   └─ ...
+```
+
+파일을 종류별로 나누면 어떤 코드가 어떤 코드를 참조하는지 쉽게 확인할 수 없다.
+
+더 이상 특정 컴포넌트나 Hook, 유틸리티 함수가 사용되지 않아서 석제된다고 했을 때, 연관된 코드가 함께 삭제되지 못해서 사용되지 않는 코드가 남아있게 될 수 있다.
+
+```txt
+└─ src
+   │  // 전체 프로젝트에서 사용되는 코드
+   ├─ components
+   ├─ containers
+   ├─ hooks
+   ├─ utils
+   ├─ ...
+   │
+   └─ domains
+      │  // Domain1에서만 사용되는 코드
+      ├─ Domain1
+      │     ├─ components
+      │     ├─ containers
+      │     ├─ hooks
+      │     ├─ utils
+      │     └─ ...
+      │
+      │  // Domain2에서만 사용되는 코드
+      └─ Domain2
+            ├─ components
+            ├─ containers
+            ├─ hooks
+            ├─ utils
+            └─ ...
+```
+
+함께 수정되는 코드 파일을 하나의 디렉토리 아래에 둔다면, 코드 사이의 의존 관계를 파악하기 쉬워진다.
+
+에를 들어 `Domain1`의 하위 코드에서 다른 도메인 (`Doamin2`)의 소스 코드를 참조한다면
+
+```ts
+import { useFoo } '../../../Domain2/hooks/useFoo'
+```
+
+이런 import 문을 만난다면 잘못된 파일을 참조하고 있다는 것을 쉽게 인지할 수 있다.
+
+또한, 특정 기능과 관련된 코드를 삭제할 때 한 디렉토리 전체를 삭제하면 깔끔하게 모든 코드가 삭제되므로 프로젝트 내부에 더 이상 사용되지 않는 코드가 없도록 할 수 있다.
+
+<SpeechBubble text="FSD 아키텍처를 적용시키면 이 내용들을 만족시킬 수 있을 것 같다." />
+
+</Toggle>
+
+<Toggle summary="매직 넘버 없애기">
+
+[매직 넘버 없애기](https://frontend-fundamentals.com/code/examples/magic-number-cohesion.html)
+
+이 코드는 좋아요 버튼을 눌렀을 때 좋아요 개수를 새로 내려받는 함수이다.
+
+```ts
+async function onLikeClick() {
+  await postLike(url);
+  await delay(300);
+  await refetchPostLike();
+}
+```
+
+`300`이라는 숫자를 애니메이션 완료를 기다리려고 사용했다면, 재생하는 애니메이션을 바꿨을 때 조용히 서비스가 깨질 수 있는 위험성이 있다.
+
+이 Hook은 가독성의 [매직 넘버 이름 붙이기](https://frontend-fundamentals.com/code/examples/magic-number-readability.html) 내용으로 볼 수 있다.
+
+숫자 `300`의 맥락을 정확하게 표시하기 위해서 상수 `ANIMATION_DELAY_MS`로 선언할 수 있다.
+
+```ts
+const ANIMATION_DELAY_MS = 300;
+
+async function onLikeClick() {
+  await postLike(url);
+  await delay(ANIMATION_DELAY_MS);
+  await refetchPostLike();
+}
+```
+
+</Toggle>
+
+<Toggle summary="폼의 응집도 생각하기">
+
+[폼의 응집도 생각하기](https://frontend-fundamentals.com/code/examples/form-fields.html)
+
+Form으로 사용자에게 값을 입력받아야 하는 경우가 많다.
+Form을 관리할 때는 2가지의 방법으로 응집도를 괸리해서, 함께 수정되어야 할 코드가 함께 수정되도록 할 수 있다.
+
+<hr />
+
+**필드 단위 응집도**
+
+필드 단위 응집은 개별 입력 요소를 독립적으로 관리하는 방식이다.
+
+- **각 필드가 고유의 검증 로직을 가짐**: 특정 필드의 유지모수가 쉬워진다.
+- **필드 단위 응집도를 고려하여 설계**: 각 필드의 검증 로직이 독립적이어서 다른 필드에 영향을 주지 않는다.
+
+```ts
+import { useForm } from "react-hook-form";
+
+export function Form() {
+  const {
+    register,
+    formState: { errors },
+    handleSubmit
+  } = useForm({
+    defaultValues: {
+      name: "",
+      email: ""
+    }
+  });
+
+  const onSubmit = handleSubmit((formData) => {
+    // 폼 데이터 제출 로직
+    console.log("Form submitted:", formData);
+  });
+
+  return (
+    <form onSubmit={onSubmit}>
+      <div>
+        <input
+          {...register("name", {
+            validate: (value) =>
+              isEmptyStringOrNil(value) ? "이름을 입력해주세요." : ""
+          })}
+          placeholder="이름"
+        />
+        {errors.name && <p>{errors.name.message}</p>}
+      </div>
+
+      <div>
+        <input
+          {...register("email", {
+            validate: (value) => {
+              if (isEmptyStringOrNil(value)) {
+                return "이메일을 입력해주세요.";
+              }
+
+              if (!/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(value)) {
+                return "유효한 이메일 주소를 입력해주세요.";
+              }
+
+              return "";
+            }
+          })}
+          placeholder="이메일"
+        />
+        {errors.email && <p>{errors.email.message}</p>}
+      </div>
+
+      <button type="submit">제출</button>
+    </form>
+  );
+}
+
+function isNil(value: unknown): value is null | undefined {
+  return value == null;
+}
+
+type NullableString = string | null | undefined;
+
+function isEmptyStringOrNil(value: NullableString): boolean {
+  return isNil(value) || value.trim() === "";
+}
+```
+
+**폼 전체 단위 응집도**
+
+폼 전체 응집은 모든 필드의 검증 로직이 폼에 종속되는 방식이다.
+
+- **폼 전체 응집도가 높아짐**: 폼 전체의 검증이 한 곳에서 관리되어 로직이 간결해진다.
+- **상태가 중앙 집중식으로 관리됨**: 폼 전체 흐름을 이해하기 쉬워진다.
+- **필드 간의 결합도가 높아짐**: 폼의 재사용성은 떨어질 수 있다.
+
+```ts
+import * as z from "zod";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+
+const schema = z.object({
+  name: z.string().min(1, "이름을 입력해주세요."),
+  email: z
+    .string()
+    .min(1, "이메일을 입력해주세요.")
+    .email("유효한 이메일 주소를 입력해주세요.")
+});
+
+export function Form() {
+  const {
+    register,
+    formState: { errors },
+    handleSubmit
+  } = useForm({
+    defaultValues: {
+      name: "",
+      email: ""
+    },
+    resolver: zodResolver(schema)
+  });
+
+  const onSubmit = handleSubmit((formData) => {
+    // 폼 데이터 제출 로직
+    console.log("Form submitted:", formData);
+  });
+
+  return (
+    <form onSubmit={onSubmit}>
+      <div>
+        <input {...register("name")} placeholder="이름" />
+        {errors.name && <p>{errors.name.message}</p>}
+      </div>
+
+      <div>
+        <input {...register("email")} placeholder="이메일" />
+        {errors.email && <p>{errors.email.message}</p>}
+      </div>
+
+      <button type="submit">제출</button>
+    </form>
+  );
+}
+```
+
+필드 단위 vs 폼 전체 단위 **응집도**
+
+**필드 단위**
+
+- **독립적인 검증이 필요할 때**: 이메일 형식 검사, 전화번호 유효성 검증, 아이디 중복 확인, 추천 코드 유효성 확인, 독립적이고 고유한 검증이 필요할 때
+- **재사용이 필요할 때**: 필드와 검증 로직이 다른 폼에서도 동일하게 사용될 수 있는 경우
+
+**폼 전체 단위**
+
+- **단일 기능을 나타낼 때**: 결제 정보, 배송 정보처럼 모든 필드가 하나의 비즈니스 로직을 이룰 때 유용
+- **단계별 입력이 필요할 때**: 회원가입, 설문조사처럼 스텝별로 동작하는 복잡한 폼의 경우
+- **필드 간 의존성이 있을 때**: 비밀번호 확인, 총액 계산처럼 필드간 상호작용이 필요한 경우
+
+</Toggle>
+
+### 글을 읽고 적용해보기
+
+<SpeechBubble text="함께 수정되는 파일을 같은 디렉토리에 두기 부분을 리펙토링 할 수 있을 것 같다." />
+
+현재 이 블로그의 파일 구조는 FSD(Folder-Sliced Design) 구조를 따라서 만들고 있다. 기존 사용하고 있던 `PostContainer` 컴포넌트의 응집도를 높히고, 독립적으로 동작할 수 있도록 개선한 과정이다.
+
+#### 기존 파일 구조
+
+```
+└─ src
+   ├─ app
+   ├─ entities
+   ├─ features
+   ├─ shared
+   ├─ styles
+   ├─ widgets
+   └─ ...
+```
+
+`widgets` 폴더 안에 `PostContainer` 컴포넌트는 `posts` 데이터를 `props`로 받아와 `useFilterPost`함수로 필터링한 후 출력하는 구조였다.
+
+```tsx
+'use client';
+
+import Post from '@/entities/post/ui/Post';
+import { useFilterPost } from '@/features/post/util/useFilterPost';
+import { CustomMetadata } from '@/shared/types/meta';
+
+interface PostContainerProps {
+  posts: {
+    slug: string;
+    meta: CustomMetadata;
+  }[];
+}
+
+const PostContainer = ({ posts }: PostContainerProps) => {
+  const filterdPosts = useFilterPost({ posts });
+
+  return (
+    <div className="flex w-full flex-col flex-wrap gap-8">
+      {filterdPosts.map((post) => (
+        <Post key={post.slug} slug={post.slug} meta={post.meta} />
+      ))}
+    </div>
+  );
+};
+
+export default PostContainer;
+```
+
+#### 문제점 및 개선 방향
+
+- **`PostContainer`의 의존성**:`PostContainer`는 데이터에 의존하기보다는 독립적으로 동작할 수 있어야한다.
+- **응집도 문제**:`PostContainer`에서 필터링 하는 함수가 다른 폴더에 있어서 응집도의 문제가 있다.
+
+#### 리펙토링 과정
+
+- **독립적인 컴포넌트로 변경**:`PostContainer`는 `props`로 받지 않고 직접 데이터를 가져오는 방식으로 수정하였다.
+- **컴포넌트 구분**: `PostContainer`를 `PostSection`으로 변경하여 데이터를 가져오는 부분과 필터링하는 부분을 나누었다.
+
+#### 최종 구조
+
+```
+└─ widgets
+   ├─ PostSection
+      ├─ ui
+        ├─ PostContainer.tsx
+        ├─ PostSection.tsx
+        └─ ...
+      ├─ model
+        ├─ useFilteredPosts.ts
+        └─ ...
+   └─ ...
+```
+
+**PostSection**
+
+```tsx
+import PostContainer from './PostContainer';
+
+import { getAllPosts } from '@/entities/post/model/getAllPosts';
+
+const PostSection = async () => {
+  const posts = await getAllPosts();
+
+  return (
+    <section
+      aria-labelledby="posts-list"
+      className="relative flex justify-between"
+    >
+      <PostContainer posts={posts} />
+    </section>
+  );
+};
+
+export default PostSection;
+```
+
+**PostContainer**
+
+```tsx
+import Post from '@/entities/post/ui/Post';
+import { CustomMetadata } from '@/shared/types/meta';
+
+interface PostContainerProps {
+  posts: {
+    slug: string;
+    meta: CustomMetadata;
+  }[];
+}
+
+const PostContainer = ({ posts }: PostContainerProps) => {
+  return (
+    <div className="flex w-full flex-col flex-wrap gap-8">
+      {posts.map((post) => (
+        <Post key={post.slug} slug={post.slug} meta={post.meta} />
+      ))}
+    </div>
+  );
+};
+
+export default PostContainer;
+```
+
+#### 결론
+
+- **응집도 개선**: **postSection**과 관련된 내용을 `/widgets/PostSection`안으로 한번에 관리할 수 있게 되었다.
+- **컴포넌트 분리**: `PostContainer`와 `PostSection`으로 구분하여 응집도를 높였다.
+- **FSD 구조 이해 향상**: `widgets`안의 컴포넌트는 독립적인 컴포넌트로 어디에서 사용해도 사용이 가능하도록 해야되는데 그 부분을 충족시킨 것 같다.
+
+## 결합도
 
 결합도가 있는 코드는 코드를 수정했을 때 영향범위가 적어서, 변경에 따른 범위를 예측할 수 있는 코드이다.
 
 > 결합도를 낮추려면
 
-- 책임을 하나씩 관리하기
-- 중복 코드 허용하기
-- Props Drilling 지우기
+<Toggle summary="책임을 하나씩 관리하기">
+[책임을 하나씩 관리하기](https://frontend-fundamentals.com/code/examples/use-page-state-coupling.html)
 
-<br />
-### 결론
+쿼리 파라미터, 상태, API 호출과 같은 로직의 종류에 따라서 함수나 컴포넌트, Hook을 나누게되면 한 번에 다루는 맥락의 종류가 많아져서 이해하기 힘들고 수정하기 어려워진다.
 
-이 4가지 기준을 모두 충족하기는 어렵다.
+<hr />
 
-함수나 변수를 공통화 및 추상화하면 응집도가 높아지는 대신 가독성이 떨어진다.
+`usePageState()` Hook은 페이지 전체의 URL 쿼리 파라미터를 한 번에 관리한다.
 
-중복코드를 허용하면 결합도를 낮출 수 있지만 응집도가 떨어진다.
+```tsx
+import moment, { Moment } from 'moment';
+import { useMemo } from 'react';
+import {
+  ArrayParam,
+  DateParam,
+  NumberParam,
+  useQueryParams,
+} from 'use-query-params';
 
-결국엔 여러가지를 비교해보며 깊이 있게 고민하면서 어떤 가치를 우선해야하는 지 고민해야된다.
+const defaultDateFrom = moment().subtract(3, 'month');
+const defaultDateTo = moment();
 
-<br />
-<br />
+export function usePageState() {
+  const [query, setQuery] = useQueryParams({
+    cardId: NumberParam,
+    statementId: NumberParam,
+    dateFrom: DateParam,
+    dateTo: DateParam,
+    statusList: ArrayParam,
+  });
 
----
+  return useMemo(
+    () => ({
+      values: {
+        cardId: query.cardId ?? undefined,
+        statementId: query.statementId ?? undefined,
+        dateFrom:
+          query.dateFrom == null ? defaultDateFrom : moment(query.dateFrom),
+        dateTo: query.dateTo == null ? defaultDateTo : moment(query.dateTo),
+        statusList: query.statusList as StatementStatusType[] | undefined,
+      },
+      controls: {
+        setCardId: (cardId: number) => setQuery({ cardId }, 'replaceIn'),
+        setStatementId: (statementId: number) =>
+          setQuery({ statementId }, 'replaceIn'),
+        setDateFrom: (date?: Moment) =>
+          setQuery({ dateFrom: date?.toDate() }, 'replaceIn'),
+        setDateTo: (date?: Moment) =>
+          setQuery({ dateTo: date?.toDate() }, 'replaceIn'),
+        setStatusList: (statusList?: StatementStatusType[]) =>
+          setQuery({ statusList }, 'replaceIn'),
+      },
+    }),
+    [query, setQuery],
+  );
+}
+```
 
-### 참고
+이 Hook은 너무 광범위한 책임을 지니고 있기 때문에 다른 컴포넌트나 다른 훅들이 이 Hook에 의존하게 될 수 있고, 수정하기 힘든 코드가 된다.
 
-[Frontend Fundamentals 변경하기 쉬운 코드](https://frontend-fundamentals.com/code/)
+```tsx
+import { useQueryParam } from 'use-query-params';
+
+export function useCardIdQueryParam() {
+  const [cardId, _setCardId] = useQueryParam('cardId', NumberParam);
+
+  const setCardId = useCallback((cardId: number) => {
+    _setCardId({ cardId }, 'replaceIn');
+  }, []);
+
+  return [cardId ?? undefined, setCardId] as const;
+}
+```
+
+이렇게 책임을 분리하면 코드를 이해하기 쉬워지고 수정하기 쉬워진다.
+
+</Toggle>
+
+<Toggle summary="중복 코드 허용하기">
+[중복 코드 허용하기](https://frontend-fundamentals.com/code/examples/use-bottom-sheet.html)
+
+여러 페이지나 컴포넌트에 걸친 중복 코드를 하나의 Hook이나 컴포넌트로 공통화하는 경우가 많다. 중복 코드를 공통화하면 응집도를 챙겨서 수정되어야 할 코드를 한꺼번에 수정할 수 있다.
+
+그렇지만, 불필요한 결합도가 생겨서 공통 컴포넌트나 Hook을 수정할 때 범위가 넓어져 오히려 수정이 어려워질 수 있다.
+
+공통화한 코드가 이후 페이지마다 다른 특이한 요구사항이 생겨서 복잡해질 수 있고, 동시에 공통 코드를 수정할 때마다 의존하는 코드들을 일일이 제대로 테스트해야 해서 오히려 코드 수정이 어려워진다.
+
+<hr />
+
+아래는 점검 정보를 인자로 받아서, 점검 중이라면 점검 바텀시트를 열고, 사용자가 알림 받기에 동의하면 로깅하고, 현재 화면을 닫는 Hook이다.
+
+```tsx
+export const useOpenMaintenanceBottomSheet = () => {
+  const maintenanceBottomSheet = useMaintenanceBottomSheet();
+  const logger = useLogger();
+
+  return async (maintainingInfo: TelecomMaintenanceInfo) => {
+    logger.log('점검 바텀시트 열림');
+    const result = await maintenanceBottomSheet.open(maintainingInfo);
+    if (result) {
+      logger.log('점검 바텀시트 알림받기 클릭');
+    }
+    closeView();
+  };
+};
+```
+
+이 Hook은 여러 페이지에서 반복적으로 보이는 로직이기에 공통화되었다. 그렇지만 앞으로 생길 수 있는 다양한 코드 변경의 가능성을 생각해 볼 수 있다.
+
+- 페이지마다 로깅하는 값이 달라진다면?
+- 어떤 페이지에서는 점검 바텀시트를 닫더라도 화면을 닫을 필요가 없다면?
+- 바텀시트에서 보여지는 텍스트나 이미지를 다르게 해야 한다면?
+
+위 Hook은 이러한 이유로 코드 변경사항에 유연하게 대응하기 위해서 복잡하게 인자를 받아야 할 것이다. 또한 이 Hook의 구현을 수정할 때마다, 이 Hook을 사용하는 모든 페이지들이 잘 동작하는지 테스트도 해야 할 것이다.
+
+다소 반복되어 보이는 코드이더라도 중복 코드를 허용하는 것이 좋은 방향일 수 있다. 동료들과 적극적으로 소통하며 점검 바텀시트의 동작을 정확하기 이해해야 한다.
+
+로깅하는 값이 같고, 점검 바텀시트의 동작이 동일하고, 바텀시트의 모양이 동일하다면, 앞으로도 그럴 예정이라면 공통화를 통해 응집도를 높일 수 있다.
+
+그렇지만 페이지마다 동작이 달라질 여지가 있다면, 공통화 없이 중복 코드를 허용하는 것이 더 좋은 선택이다.
+
+</Toggle>
+
+<Toggle summary="Props Drilling 지우기">
+[Props Drilling 지우기](https://frontend-fundamentals.com/code/examples/item-edit-modal.html)
+
+Props Drilling은 부모 컴포넌트와 자식 컴포넌트 사이에 결합도가 생겼다는 것을 나타내는 명확한 표시이다.
+
+> 만약 Drilling되는 `name` prop의 이름이 `firstName`으로 변경되면, 해당 prop을 참조하는 모든 컴포넌트를 수정해야 한다.
+
+<hr />
+
+아래는 키워드를 입력하고 아이템을 선택하는 모달이다.
+
+```tsx
+function ItemEditModal({ open, items, recommendedItems, onConfirm, onClose }) {
+  const [keyword, setKeyword] = useState('');
+
+  // 다른 ItemEditModal 로직 ...
+
+  return (
+    <Modal open={open} onClose={onClose}>
+      <ItemEditBody
+        items={items}
+        keyword={keyword}
+        onKeywordChange={setKeyword}
+        recommendedItems={recommendedItems}
+        onConfirm={onConfirm}
+        onClose={onClose}
+      />
+      {/* ... 다른 ItemEditModal 컴포넌트 ... */}
+    </Modal>
+  );
+}
+
+function ItemEditBody({
+  keyword,
+  onKeywordChange,
+  items,
+  recommendedItems,
+  onConfirm,
+  onClose,
+}) {
+  return (
+    <>
+      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+        <Input
+          value={keyword}
+          onChange={(e) => onKeywordChange(e.target.value)}
+        />
+        <Button onClick={onClose}>닫기</Button>
+      </div>
+      <ItemEditList
+        keyword={keyword}
+        items={items}
+        recommendedItems={recommendedItems}
+        onConfirm={onConfirm}
+      />
+    </>
+  );
+}
+
+// ...
+```
+
+이 컴포넌트는 부모인 `ItemEditModal`과 자식인 `ItemEditBody`, `ItemEditList` 등이 동일한 값인 `recommendedItems`, `onConfirm`, `keyword` 등을 prop으로 공유하고 있다. 이는 Props Drilling이 발생하고 있는 것이다.
+
+예를 들어, 더 이상 아이템에 대한 추천 기능이 사라져서 `recommendedItems`를 삭제해야 한다면, 연관된 모든 컴포넌트에서 삭제해야한다. 코드 수정범위가 필요 이상으로 넓고, 결합도가 높다.
+
+**A. 조합(Composition) 패턴 활용**
+
+조합 패턴을 사용하면 Props Drilling 문제를 해결할 수 있거, 불필요한 중간 추상화를 제거하여 개발자가 각 컴포넌트의 역할과 의도를 보다 명확하게 이해할 수 있다.
+
+```tsx
+function ItemEditModal({ open, items, recommendedItems, onConfirm, onClose }) {
+  const [keyword, setKeyword] = useState('');
+
+  return (
+    <Modal open={open} onClose={onClose}>
+      <ItemEditBody onClose={onClose}>
+        <ItemEditList
+          keyword={keyword}
+          items={items}
+          recommendedItems={recommendedItems}
+          onConfirm={onConfirm}
+        />
+      </ItemEditBody>
+    </Modal>
+  );
+}
+
+function ItemEditBody({ children, onClose }) {
+  return (
+    <>
+      <div style="display: flex; justify-content: space-between;">
+        <Input
+          value={keyword}
+          onChange={(e) => onKeywordChange(e.target.value)}
+        />
+        <Button onClick={onClose}>닫기</Button>
+      </div>
+      {children}
+    </>
+  );
+}
+```
+
+`children`을 사용해 필요한 컴포넌트를 무보에서 작성하도록 하면 불필요한 Propd Drilling을 줄일 수 있다.
+
+하지만, 조합 패턴만으로는 해결되지 않는 경우가 있다. 위의 예시에서는 `ItemEditModal` 컴포넌트는 여전히 `items`와 `recommendedItems`를 Props Drilling하고 있다.
+
+**B. ContextAPI 활용**
+
+Context API를 활용하면, 데이터의 흐름을 간소화하고 계층 구조 전체에 쉽게 공유할 수 있다.
+
+```tsx
+function ItemEditModal({ open, onConfirm, onClose }) {
+  const [keyword, setKeyword] = useState('');
+
+  return (
+    <Modal open={open} onClose={onClose}>
+      <ItemEditBody onClose={onClose}>
+        <ItemEditList keyword={keyword} onConfirm={onConfirm} />
+      </ItemEditBody>
+    </Modal>
+  );
+}
+
+function ItemEditList({ children, onClose }) {
+  const { items, recommendedItems } = useItemEditModalContext();
+
+  return (
+    <>
+      <div style="display: flex; justify-content: space-between;">
+        <Input
+          value={keyword}
+          onChange={(e) => onKeywordChange(e.target.value)}
+        />
+        <Button onClick={onClose}>닫기</Button>
+      </div>
+      {children}
+    </>
+  );
+}
+```
+
+</Toggle>
+
+## 결론
+
+4가지 기준을 모두 한꺼번에 충족하기는 어렵다.
+
+함수나 변수가 항상 같이 수정되기 위해서 공통화 및 추상화하면, 응집도가 높아지지만 코드가 한 차례 추상화되기 때문에 가독성이 떨어진다.
+
+중복 코드를 허용하면, 코드의 영향범위를 줄일 수 있어서 결합도를 낮출 수 있지만 한쪽을 수정했을 때 다른 한쪽을 실수로 수정하지 못할 수 있어서 응집도가 떨어진다.
+
+프론트엔드 개발자는 현재 직면한 상황을 바탕으로, 깊이 있게 고민하면서, 장기적으로 코드를 수정하기 쉽게 하기 위해서 어떤 가치를 우선해야 하는지 고민해야한다.
+
+## 느낀점
+
+원래 생각하던 좋은 코드에 대해서 막연하게만 생각하고 있었는데, 이 글을 통해 구체적인 기준이 정리된 느낌이다. 특히 가독성, 예측 가능성, 응집도, 결합도라는 4가지 요소를 기준으로 코드를 바라보는 것이 중요하다는 걸 깨달았다.
+
+각 요소에 대한 내 생각을 정리해보면,
+
+- **가독성**: 코드를 위에서 아래로 읽어 내려가면서 어떤 동작을 하는지 쉽게 이해할 수 있도록 작성해야 한다. 불필요한 복잡성을 줄이고, 의미가 명확한 네이밍과 적절한 코드 구조를 유지하는 것이 핵심이다.
+- **예측 가능성**: 일관된 코딩 컨벤션을 따르고, 함수나 컴포넌트의 이름만 보고도 역할을 쉽게 유추할 수 있도록 작성해야 한다. 이렇게 하면 코드의 흐름을 빠르게 파악할 수 있고, 유지보수도 쉬워진다.
+- **응집도**: 관련된 기능과 로직은 한곳에 모아서 관리해야 한다. 하나의 함수나 컴포넌트가 여러 역할을 담당하면 이해하기 어려워지고, 수정할 때도 복잡성이 증가한다. 따라서, 하나의 기능이 하나의 역할만 하도록 구조를 잡는 것이 중요하다.
+- **결합도**: 서로 다른 모듈이나 컴포넌트 간의 의존성을 최소화해야 한다. 특정 코드가 다른 코드에 강하게 결합되어 있으면 변경이 어려워지고, 재사용성이 떨어진다. 따라서, 인터페이스를 명확히 정의하고, 의존성을 줄이는 방향으로 코드를 구성해야 한다.
+
+또한, **코드 리뷰**에 대한 관점도 새롭게 정립할 수 있었다.
+
+그동안 코드 리뷰를 할 때는 주로 기능 구현이 잘 되었는지, 오류가 없는지를 중점적으로 봤다. 하지만 이번 글을 읽고 나서는 단순한 기능 검증을 넘어, 가독성, 예측 가능성, 응집도, 결합도 관점에서도 피드백을 주고받는 것이 중요하다는 걸 깨달았다.
+
+예를 들어, 단순히 "이 코드 동작하나요?" 정도에서 끝나는 것이 아니라
+
+- 이 코드가 직관적으로 읽히는가?
+- 이 네이밍만 보고도 어떤 역할을 하는지 알 수 있는가?
+- 이 함수가 하나의 역할만 수행하는가?
+- 불필요한 의존성이 있지는 않은가?
+
+이런 부분을 고민하며 피드백하면 훨씬 더 좋은 코드 리뷰가 될 것이다.
+
+결국, 좋은 코드란 단순히 동작하는 코드가 아니라 읽기 쉽고, 예측 가능하며, 유지보수가 용이한 코드라는 걸 다시 한번 깨달았다. 앞으로 코드 리뷰를 할 때도 이런 기준을 바탕으로 더 의미 있는 피드백을 주고받아야겠다고 느꼈다.
