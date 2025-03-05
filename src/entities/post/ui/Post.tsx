@@ -18,7 +18,6 @@ const Post = ({ slug, meta }: PostProps) => {
           src={`/img/thumbnail/${slug}.png`}
           width={100}
           height={100}
-          layout="responsive"
           quality={100}
           className="w-full rounded-t-12"
           alt={`${title} thumbnail image`}
