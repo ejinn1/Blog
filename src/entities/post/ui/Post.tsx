@@ -12,16 +12,17 @@ const Post = ({ slug, meta }: PostProps) => {
   const { title, description, date } = meta;
 
   return (
-    <div className="transition-all-base w-full cursor-pointer rounded-12 bg-beige-300 hover:bg-beige-400/60 dark:bg-gray-400/20 dark:hover:bg-gray-400/40">
-      <Link href={`/blog/${slug}`}>
-        <Image
-          src={`/img/thumbnail/${slug}.png`}
-          width={100}
-          height={100}
-          quality={100}
-          className="w-full rounded-t-12"
-          alt={`${title} thumbnail image`}
-        />
+    <Link href={`/blog/${slug}`}>
+      <div className="transition-all-base w-full cursor-pointer rounded-12 bg-beige-300 hover:bg-beige-400/60 dark:bg-gray-400/20 dark:hover:bg-gray-400/40">
+        <div className="relative h-150 w-full">
+          <Image
+            src={`/img/thumbnail/${slug}.png`}
+            fill
+            quality={100}
+            className="rounded-t-12 object-cover"
+            alt={`${title} thumbnail image`}
+          />
+        </div>
         <div className="flex h-150 flex-col justify-between p-16">
           <div>
             <h2 className="transition-colors-base text-18 font-semibold dark:text-white">
@@ -33,8 +34,8 @@ const Post = ({ slug, meta }: PostProps) => {
           </div>
           <p className="text-end text-12 text-gray-200">{date}</p>
         </div>
-      </Link>
-    </div>
+      </div>
+    </Link>
   );
 };
 

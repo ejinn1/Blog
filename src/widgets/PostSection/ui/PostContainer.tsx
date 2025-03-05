@@ -10,7 +10,7 @@ interface PostContainerProps {
 
 const PostContainer = ({ posts }: PostContainerProps) => {
   return (
-    <div className="mx-auto grid grid-cols-2 gap-16 px-16 md:grid-cols-3">
+    <div className="mx-auto grid w-full grid-cols-2 gap-16 px-16 md:grid-cols-3">
       {posts.map((post) => (
         <Post key={post.slug} slug={post.slug} meta={post.meta} />
       ))}
