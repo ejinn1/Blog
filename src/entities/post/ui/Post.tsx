@@ -1,8 +1,7 @@
+import Image from 'next/image';
 import Link from 'next/link';
 
 import { CustomMetadata } from '@/shared/types/meta';
-import Tag from '@/shared/ui/Tag';
-import { getTags } from '@/shared/util/getTags';
 
 interface PostProps {
   slug: string;
@@ -10,23 +9,30 @@ interface PostProps {
 }
 
 const Post = ({ slug, meta }: PostProps) => {
-  const { title, description, date, keywords } = meta;
-  const tags = getTags(keywords);
+  const { title, description, date } = meta;
 
   return (
-    <div className="group cursor-pointer p-16">
+    <div className="transition-all-base w-full cursor-pointer rounded-12 bg-beige-300 hover:bg-beige-400/60 dark:bg-gray-400/20 dark:hover:bg-gray-400/40">
       <Link href={`/blog/${slug}`}>
-        <h2 className="transition-colors-base text-20 font-semibold group-hover:text-green-400 dark:text-white">
-          {title}
-        </h2>
-        <p className="text-13 font-medium text-gray-300">{description}</p>
-        <div className="mt-16 flex items-center">
-          <p className="mr-20 text-12 text-gray-200">{date}</p>
-          <div className="-mb-4 flex items-center gap-4 pb-4">
-            {tags.map((tag) => (
-              <Tag key={tag} tag={tag} />
-            ))}
+        <Image
+          src={`/img/thumbnail/${slug}.png`}
+          width={100}
+          height={100}
+          layout="responsive"
+          quality={100}
+          className="w-full rounded-t-12"
+          alt={`${title} thumbnail image`}
+        />
+        <div className="flex h-150 flex-col justify-between p-16">
+          <div>
+            <h2 className="transition-colors-base text-18 font-semibold dark:text-white">
+              {title}
+            </h2>
+            <p className="text-13 font-medium text-gray-300 dark:text-gray-200">
+              {description}
+            </p>
           </div>
+          <p className="text-end text-12 text-gray-200">{date}</p>
         </div>
       </Link>
     </div>
