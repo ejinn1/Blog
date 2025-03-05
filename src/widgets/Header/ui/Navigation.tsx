@@ -13,7 +13,7 @@ export default function Navigation() {
         <ThemeToggle />
         <li>
           <Link href="https://github.com/ejinn1/blog">
-            <GithubIcon className="transition-colors-base size-32 rounded-8 p-4 text-black hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-black dark:hover:text-gray-200" />
+            <GithubIcon className="hover-bg-base size-32 rounded-8 p-4 text-black  dark:text-gray-300 dark:hover:text-gray-200" />
           </Link>
         </li>
       </ul>

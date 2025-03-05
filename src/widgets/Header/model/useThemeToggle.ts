@@ -20,7 +20,7 @@ export const useThemeToggle = () => {
 
   const buttonClass = (value: 'class' | 'system') =>
     cn(
-      'rounded-8 p-4 text-black dark:text-gray-300 hover:bg-gray-100 dark:hover:text-gray-200 dark:hover:bg-black transition-colors-base',
+      'hover-bg-base rounded-8 p-4 text-black dark:text-gray-300 dark:hover:text-gray-200  transition-colors-base',
       clicked === value && '!text-gray-200',
     );
 
