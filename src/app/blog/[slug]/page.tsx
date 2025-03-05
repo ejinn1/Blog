@@ -45,7 +45,7 @@ export default async function BlogPage({ params }: BlogPageProps) {
 
   return (
     <div className="size-full max-w-1000">
-      <BlogHeader meta={meta} tags={tags} />
+      <BlogHeader meta={meta} tags={tags} slug={slug} />
       <div className="flex size-full">
         <article className="prose size-full px-16 py-24 dark:prose-invert md:w-750">
           <Content />
