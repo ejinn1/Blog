@@ -10,7 +10,7 @@ export default function Logo() {
           width="32"
           height="32"
           alt="logo"
-          className="transition-colors-base rounded-8 p-4 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-black dark:hover:text-gray-200"
+          className="hover-bg-base rounded-8 p-4 dark:text-gray-300 dark:hover:text-gray-200"
         />
       </Link>
     </div>
