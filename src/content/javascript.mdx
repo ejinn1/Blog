@@ -1,0 +1,1399 @@
+---
+title: 'Javascript 핵심 개념 공부하기'
+description: 'Javascript에서 중요한 개념들을 코드와 함께 학습한 내용입니다.'
+date: '2025-03-19'
+category: 'Frontend'
+keywords: 'javascript'
+images: '/img/thumbnail/javascript.png'
+---
+
+import Toggle from '@/shared/ui/Toggle.tsx';
+import SpeechBubble from '@/shared/ui/SpeechBubble.tsx';
+
+> Javascript에 대한 개념을 정리하고 코드와 함께 학습해보려고 합니다.
+
+## 실행 컨텍스트
+
+### 실행 컨텍스트란
+
+실행 컨텍스트는 자바스크립트 엔진이 코드를 실행할 때 생성하고 관리하는 환경을 의미한다.
+
+> 자바스크립트 코드가 실행되는 공간
+
+### 생성 과정
+
+코드를 실행할 때 실행 컨텍스트는 3단계 과정을 거쳐 생성된다.
+
+**1. 생성 단계 (Create Phase)**
+
+- 변수를 메모리에 등록하지만, 아직 값이 할당되지 않음 (`undefined`)
+- 함수 선언문은 메모리에 먼저 저장됨
+- `this` , `arguments` 같은 기본 정보가 설정됨
+
+**2. 실행 단계 (Execution Phase)**
+
+- 코드가 한 줄씩 실행되면서 변수에 값이 할당됨
+- 연산 및 함수 호출이 일어남
+
+**3. 소멸 단계 (Garbage Collection)**
+
+- 실행이 끝난 컨텍스트는 콜 스택에서 제거됨
+
+### 구성 요소
+
+실행 컨텍스트는 3가지 주요 요소로 구성돼 있다.
+
+- **변수 환경**: 변수 및 함수 선언 저장
+- **렉시컬 환경**: `let` , `const` 변수 및 클로저 정보 저장
+- **this** : 실행 컨텍스트에서 `this` 가 가리키는 값
+
+### 예시
+
+```js
+function outer() {
+  var a = 10;
+  function inner() {
+    console.log(a); // 10
+  }
+  inner();
+}
+
+outer();
+```
+
+**과정**
+
+**1. 전역 실행 컨텍스트 생성**
+
+- `outer` 함수가 메모리에 등록됨
+
+**2. outer() 실행** → 새로운 실행 컨텍스트 생성
+
+- `a` 변수가 메모리에 등록 (`var a = 10`)
+- `inner` 함수가 메모리에 등록됨
+
+**3. inner() 실행** → 새로운 실행 컨텍스트 생성
+
+- `console.log(a)` 실행 → `a` 를 찾기 위해 렉시컬 환경을 참조
+- `outer` 의 변수 `a = 10` 찾아서 출력
+
+**4. inner() 실행 종료** → 컨텍스트 제거
+
+**5. outer() 실행 종료** → 컨텍스트 제거
+
+**6. 전역 컨텍스트 종료** → 프로그램 종료
+
+### 콜 스택
+
+실행 컨텍스트를 콜 스택에 쌓아서 관리한다.
+
+```js
+function first() {
+  console.log('first');
+  second();
+}
+
+function second() {
+  console.log('second');
+  third();
+}
+
+function third() {
+  console.log('third');
+}
+
+first();
+```
+
+**콜 스택의 변화**
+
+1. `first()` 실행 → `first` 컨텍스트 생성
+2. `second()` 실행 → `second` 컨텍스트 생성
+3. `third()` 실행 → `third` 컨텍스트 생성
+4. `third` 종료 → 컨텍스트 제거
+5. `second` 종료 → 컨텍스트 제거
+6. `fitst` 종료 → 컨텍스트 제거
+
+**콜 스택 최종 결과**
+
+```
+third
+second
+first
+```
+
+### 활용
+
+**디버깅 시 Call Stack 확인**
+
+- 크롬 개발자 도구(F12) → “Sources” → Call Stack을 확인하면 어떤 함수가 실행되는지 쉽게 추적이 가능하다.
+  <img src="/img/contents/javascript/call_stack.png" alt="call stack 이미지" />
+  Scope에는 현재 스코프의 정보가, Call Stack에는 현재 콜 스택의 정보가
+  들어가있다.
+
+**클로저와 연관된 개념**
+
+- 실행 컨텍스트가 종료되어도, 렉시컬 환경이 유지되면 클로저가 생성된다.
+- React의 `useCallback` 이나 `useMemo` 와 같은 훅에서도 관련 개념이 활용된다.
+
+**this 바인딩과 연관**
+
+- 실행 컨텍스트는 `this` 를 포함하고 있기 때문에, `this` 의 바인딩 원리를 이해하는데 필수적이다.
+
+### 정리
+
+- 실행 컨텍스트는 코드가 실행되는 환경이다.
+- 콜 스택을 통해 실행 컨텍스트가 관리된다.
+- 변수 환경, 렉시컬 환경, this 바인딩으로 구성된다.
+- 클로저, 비동기 처리, this 바인딩과 밀접한 관련이 있다.
+
+<hr />
+
+## this 바인딩
+
+### this란?
+
+`this` 는 현재 실행 중인 실행 컨텍스트에서 `자신이 속한 객체` 를 가리키는 참조 변수이다.
+
+> 함수가 호출될 때 this가 어떤 객체를 가리킬지 결정됨
+
+### this 가 결정되는 4가지 규칙
+
+**1. 기본 바인딩**
+
+- 브라우저 환경에서는 `window`
+- Node.js 환경에서는 `global`
+
+**2. 객체의 메서드 호출**
+
+객체의 메서드를 호출할 때 `this` 는 해당 객체를 가리킨다.
+
+```js
+const obj = {
+  name: '유의진',
+  hi() {
+    console.log(this.name); // this -> obj
+  },
+};
+
+obj.hi(); // "유의진"
+```
+
+**3. 명시적 바인딩**
+
+`call()` , `apply()` , `bind()` 를 사용하면 this를 직접 지정할 수 있다.
+
+```js
+function hi() {
+  console.log(`내 이름은 ${this.name}`);
+}
+
+const user = { name: 'A' };
+
+hi.call(user); // 내 이름은 A
+hi.apply(user); // 내 이름은 A
+```
+
+`bind()` 는 새로운 함수를 반환한다.
+
+```js
+const fn = hi.bind(user);
+fn(); // 내 이름은 A
+```
+
+> call과 apply는 즉시 실행되지만, bind는 새로운 함수를 반환한다.
+
+**4. new**
+
+`new` 를 사용하면 `this`는 새로 생성된 객체를 가리킨다.
+
+```js
+function Person(name) {
+  this.name = name;
+}
+
+const p1 = new Person('A');
+console.log(p1.name); // A
+```
+
+### this와 화살표 함수의 차이
+
+- 화살표 함수는 this를 바인딩하지 않는다.
+- 부모 컨텍스트(렉시컬 환경)의 this를 그대로 사용한다.
+
+```js
+const obj = {
+	name: "A",
+	hi: function() {
+		const inner1 = () = {
+			console.log(this.name) // this -> obj
+		}
+		inner1()
+	}
+	hello: function() {
+		function inner2() {
+			console.log(this.name) // this -> window (undefined)
+		}
+		inner2()
+	}
+}
+
+obj.hi() // A
+obj.hello() // undefined
+```
+
+<SpeechBubble text={<>
+왜 `obj.hello()` 는 `undefined`가 나올까?
+
+<br />
+
+이때의 `this`는 `window`이고 `window.name`은 기본적으로 `undefined`이기
+때문이다.
+
+</>} />
+
+### 예시
+
+이벤트 핸들러에서 `this`
+
+```js
+const button = document.querySelector('button');
+
+button.addEventListener('click', function () {
+  console.log(this); // this -> 클릭된 버튼
+});
+
+button.addEventListener('click', () => {
+  console.log(this); // this -> window
+});
+```
+
+화살표 함수에서는 `this`가 `window`를 가리키기 때문에 의도한 동작이 되지 않을 수 있다.
+
+### 정리
+
+- `this` 는 호출 방식에 따라 값이 달라진다.
+- `call`, `apply` , `bind` 로 명시적으로 `this` 를 지정 가능하다.
+- `new` 키워드를 사용하면 `this` 는 새로운 객체를 가리킨다.
+- 화살표 함수는 this를 바인딩하지 않고 부도 컨텍스트를 따른다.
+
+<hr />
+
+## 클로저
+
+### 클로저란?
+
+외부 함수의 변수를 기억하고 그 변수에 접근할 수 있는 함수이다.
+
+> 함수 안에서 선언된 함수가 외부 함수의 변수에 접근할 수 있는 현상
+
+```js
+function outer() {
+  let cnt = 0;
+
+  function inner() {
+    cnt++;
+    console.log(cnt);
+  }
+
+  return inner;
+}
+
+const closureFn = outer(); // outer() 실행 후 inner 반환
+
+closureFn(); // 1
+closureFn(); // 2
+closureFn(); // 3
+```
+
+`closureFn`은 `inner` 를 가리키며, `cnt` 를 계속 기억하고 있기 때문에 호출할 때마다 값이 증가한다.
+
+### 동작 방식
+
+클로저는 렉시컬 환경을 유지하기 때문에 동작할 수 있다.
+
+1. `outer()` 실행 → 새로운 실행 컨텍스트 생성
+2. `cnt` 변수 선언 후 `inner` 함수 반환
+3. `closureFn` 이 `inner` 를 참조하며 `cnt` 의 렉시컬 환경을 유지
+4. `closureFn()` 을 실행하면 `cnt` 를 기억하고 계속 접근 가능
+
+> 클로저를 통해서 outer 함수의 실행이 끝난 후에도 `cnt` 를 유지할 수 있다.
+
+### 예시
+
+**1. 데이터 은닉, 캡슐화**
+
+```js
+function createCounter() {
+  let cnt = 0;
+
+  return {
+    increment: function () {
+      cnt++;
+      console.log(cnt);
+    },
+    devrement: function () {
+      cnt--;
+      console.log(cnt);
+    },
+  };
+}
+
+const counter = createCounter();
+counter.increment(); // 1
+counter.increment(); // 2
+counter.decrement(); // 1
+```
+
+> cnt 는 외부에서 직접 변경할 수 없고, increment, decrement 함수로만 조작이 가능하다.
+
+**2. setTimeout**
+
+```js
+function delayMessage(message. delay){
+	setTimeout(function() {
+		console.log(message)
+	}, delay)
+}
+
+delayMessage("Hi", 1000) // 1초 뒤에 "Hi" 출력
+```
+
+### useCallback
+
+React의 `useCallback` 도 클로저를 활용한 함수이다.
+
+```tsx
+function Counter() {
+  const [count, setCount] = useState(0);
+
+  const increment = useCallback(() => {
+    setCount(count + 1);
+  }, [count]);
+
+  return <button onClick={increment}>{count}</button>;
+}
+```
+
+> `increment` 는 `count` 를 참조하는 클로저이다. `useCallback`을 사용하면 함수 재생성을 방지할 수 있다.
+
+<Toggle summary="useCallback 만들어보기">
+  `useCallback` 은 이전의 콜백 함수를 기억하고, 의존성 배열이 변경될 때만 새로운
+  함수를 생성하는 역할을 한다.
+
+```js
+function useCallback(callback, dependencies) {
+  let lastCallback = null;
+  let lastDependencies = [];
+
+  return function () {
+    if (
+      !lastCallback ||
+      !lastDependencies.every((dep, i) => dep === dependencies[i])
+    ) {
+      lastCallback = callback;
+      lastDependencies = dependencies;
+    }
+
+    return lastCallback;
+  };
+}
+```
+
+</Toggle>
+
+### 정리
+
+- 클로저는 외부 함수의 변수를 기억하고 접근할 수 있는 함수이다.
+- 렉시컬 환경 덕분에 실행이 끝나도 변수를 유지한다.
+- 데이터은닉, 초기화, 비동기 함수에서 유용하다.
+- React의 useCallback에서도 활용된다.
+
+<hr />
+
+## 이벤트 루프
+
+자바스크립트의 싱글 스레드 환경에서 비동기 작업을 효율적으로 처리하기 위한 매커니즘이다.
+
+### 실행 순서
+
+**1. Call Stack(콜 스택) (위쪽)**
+**2. Web APIs**
+
+- `setTimeout` , `fetch` , `DOM 이벤트` 같은 비동기 작업을 실행하는 브라우저 환경(API)
+- `setTimeout(0)` , `fetch().then()` 같은 비동기 코드 실행 시, 콜백을 Web API에서 처리
+
+**3. Task Queue (콜백 큐)**
+
+- 비동기 작업이 끝나면 등록된 콜백에 여기에 추가됨
+- 이벤트 루프가 Call Stack이 비면 Tast Queue에서 함수를 꺼내 실행
+
+**4. Microtask Queue (마이크로태스크 큐)**
+
+- `Promise.then()` , `MutationObserver` 같은 우선순위가 높은 작업을 저장하는 공간
+- 일반 Tast Queue 보다 먼저 실행됨
+
+**5. Event Loop (이벤트 루프)**
+
+- Call Stack이 비어 있을 때 Tast Queue 또는 MicroTask Queue에서 작업을 가져와 실행
+
+### Macrotast vs Microtask
+
+자바스크립트의 비동기 작업이 이 두가지로 구분된다.
+
+#### Macrotast (매크로태스크)
+
+이벤트 루프가 한 번 돌 때마다 하나의 Macrotast만 실행된다.
+
+실행 후, 다음 Microtastk를 실행
+
+- `setTimeout` , `setInterval`
+- `requestAnimationFrame`
+
+#### Microtast (마이크로태스크)
+
+Macrotast 보다 먼저 실행된다.
+
+Micritast가 모두 처리될 때까지 다음 Macrotast로 넘어가지 않는다.
+
+- `Promise.then()`, `Promise.catch()`, `Promise.finally()`
+- `MutationObserver`
+- `queueMicrotask()`
+
+### 예시
+
+```js
+console.log('시작');
+
+setTimeout(() => {
+  console.log('setTimeout 실행');
+}, 0);
+
+Promise.resolve().then(() => {
+  console.log('Promise 실행');
+});
+
+console.log('동기 코드 실행');
+
+// 시작
+// 동기 코드 실행
+// Promise 실행
+// setTimeout 실행
+```
+
+**실행 순서 분석**
+
+`console.log(”시작”)` → 즉시 실행
+
+`setTimeout ~~` → Macrotask Queue에 추가
+
+`Promise ~~` → Microtask Queue에 추가
+
+`console.log("동기 코드 실행")` ⇒ 즉시 실행
+
+Microtask Queue 실행 → `Promise ~~` 실행
+
+Macrotask Queue 실행 → `setTimeout ~~` 실행
+
+### 정리
+
+- Call Stack에서 동기 코드 실행
+- 비동기 작업은 Web API에서 처리 후 Tast Queue에 저장
+- Microtask가 Macrotask보다 먼저 실행됨
+- 이벤트 루프가 Call Stack이 비면 Task Queue에서 하나씩 실행
+
+<hr />
+
+## **Promise & async/await**
+
+### Promise 개념
+
+`Promise` 는 비동기 작업의 결과를 나타내는 객체이다.
+
+**상태**
+
+- `pending` : 비동기 작업이 아직 끝나지 않음
+- `fulfilled` : 작업이 성공적으로 끝남 → `resolve()` 호출됨
+- `rejected` : 작업이 실패함 → `reject()` 호출됨
+
+### Promise 체이닝
+
+`then()` 을 여러 번 연결해서 비동기 작업을 순차적으로 실행할 수 있다.
+
+```js
+const fetchData = () => {
+  return new Promise((resolve) => {
+    setTimeout(() => resolve('데이터 1'), 1000);
+  });
+};
+
+fetchDate()
+  .then((data1) => {
+    console.log(data1); // 데이터 1
+    return new Promise((resolve) => {
+      setTimeout(() => resolve('데이터 2', 1000));
+    });
+  })
+  .then((data2) => console.log(data2)); // 데이터 2
+```
+
+- `then()` 내부에서 새로운 `Promise`를 반환하면 다음 `then()` 에서 처리 가능
+
+### async/await 개념
+
+`async/await` 는 Promise를 더 직관적으로 사용할 수 있게 도와주는 문법이다.
+
+**기본 구조**
+
+- `async` 키워드를 함수 앞에 붙이면 해당 함수는 자동으로 Promise를 반환
+- `await` 키워드는 Promise가 완료될 때까지 기다림
+
+### async/await로 비동기 코드 작성
+
+Promise 체이닝을 `async/await` 로 바꿔보면 코드가 더 깔끔해진다.
+
+```js
+async function fetchAllDate() {
+  const data1 = await fetchData();
+  console.log(data1); // 데이터 1
+
+  const data2 = await new Promise((resolve) => {
+    setTimeout(() => resolve('데이터 2'), 1000);
+  });
+  console.log(data2); // 데이터 2
+}
+
+fetchAllData();
+```
+
+- `await` 덕분에 동기 코드처럼 자연스럽게 작성 가능
+- `then()` 을 연속적으로 쓰지 않아도 가독성이 좋아짐
+
+### async/await의 예외 처리
+
+`try…catch` 를 사용하면 `async/await` 에서 발생하는 에러를 쉽게 처리할 수 있다.
+
+```js
+async function fetchWithError() {
+  try {
+    const response = await new Promise((_, reject) => {
+      setTimeout(() => reject('에러 발생'), 1000);
+    });
+    console.log(response);
+  } catch (error) {
+    console.log('Error', error);
+  }
+}
+
+fetchWithError();
+```
+
+- `try` 블록에서 `await` 을 실행하고 `catch` 블록에서 에러를 처리
+- `catch()` 보다 직관적이고 가독성이 좋음
+
+### Promise 다루기
+
+**Promise.all**
+
+- 모든 `Promise` 가 완료될 때까지 기다렸다가 결과 배열을 반환
+- 하나라도 실패하면 전체 실패
+
+**Promise.race**
+
+- 가장 먼저 완료된 `Promise` 만 반환
+
+**Promise.allSettled**
+
+- 모든 `Promise` 가 완료될 때까지 기다리지만, 실패한 것도 포함해 결과를 반환
+
+**Promise.any**
+
+- 하나라도 `fulfilled` 상태가 되면 그 값을 반환 (실패한 것은 무시)
+
+### 정리
+
+- `Promise` 는 비동기 작업을 다룰 때 사용하는 객체
+- `anync/await` 을 사용하면 비동기 코드를 동기 코드처럼 쉽게 작성 가능
+- `Promise.all` , `Promise.race` 등으로 여러 개의 비동기 작업을 병렬로 처리 가능
+
+<hr />
+
+## var, let, const
+
+`var` , `let` , `const` 는 변수의 범위, 호이스팅, 재할당 가능 여부 등에서 중요한 차이가 있다.
+
+### var
+
+ES5 이전에 사용되던 변수 선언 방식으로 **변수 선언과 초기화가 호이스팅** 된다는 특징이 있다.
+
+#### 특성
+
+- **호이스팅**: 선언이 코드의 최상단으로 끌어올려져서 변수 선언 전에 접근할 수 있다.
+- **변수 범위**: 함수 스코프 (함수 내부에서만 유효)
+- **재할당 가능**: 값을 재할당할 수 있다.
+
+#### 예시
+
+```js
+console.log(a); // undefined
+var a = 10;
+console.log(a); // 10
+```
+
+호이스팅 때문에 `var` 로 선언한 변수는 선언문 이전에 `undefined` 로 초기화된 상태로 접근할 수 있다.
+
+#### 문제점
+
+- 블록 레벨 스코프가 없음: 반복문이나 조건문에서 `var` 를 사용하면 예기치 못한 동작이 발생할 수 있다.
+- 변수 덮어쓰기: 같은 이름의 변수를 여러 번 선언할 수 있어 문제가 발생할 수 있다.
+
+### let
+
+ES6에서 도입된 변수 선언 방식으로, `var` 의 문제점을 해결하려는 목적으로 만들어졌다.
+
+#### 특성
+
+- **호이스팅**: `let` 도 호이스팅이 발생하지만, 선언 전에 접근할 수 없다. (TDZ)
+- **변수 범위**: 블록 스코피 (블록 내부에서만 유효)
+- **재할당 가능**: 값을 재할당할 수 있다.
+
+#### 예시
+
+```js
+console.log(a); // ReferenceError: Cannot access 'a' before initialization (TDZ)
+let a = 10;
+console.log(a); // 10
+```
+
+`let` 변수가 선언되기 전까지 TDZ에 있어서 참조할 수 없다. 변수는 선언 시점에만 사용할 수 있다.
+
+> TDZ(Temporal Dead Zone)
+>
+> 변수를 선언하기 전에는 그 변수를 참조할 수 없음
+> 예상치 못한 오류를 방지할 수 있음
+
+### const
+
+ES6에서 도입된 상수 선언 방식으로 `let` 과 유사하지만 재할당이 불가능하다.
+
+#### 특성
+
+- **호이스팅**: `const` 도 호이스팅이 발생하지만, `let` 과 마찬가지로 선언되기 전에는 접근할 수 없다.
+- **변수 범위**: 블록 스코프 (블록 내부에서만 유효)
+- **재할당 불가**: 값을 재할당할 수 없음 (객체나 배열의 경우 내용을 변경할 수 있음)
+
+#### 예시
+
+```js
+const a = 10;
+console.log(a); // 10
+
+a = 20; // TypeError: Assignment to constant variable
+```
+
+`const` 로 선언한 변수는 값을 재할당할 수 없지만 객체나 배열의 내용을 수정할 수 있다.
+
+<SpeechBubble text="아마 객체나 배열은 값을 변경하더라도 메모리의 주소값이 변경되지 않으니까 그런거 같은디?" />
+
+```js
+const obj = { name: 'A' };
+obj.name = 'B'; // 가능
+obj = {}; // TypeError: Assignment to constant variable
+```
+
+### 호이스팅
+
+#### var의 호이스팅
+
+- 선언만 호이스팅되고, 초기화는 실제 코드에서 실행된다.
+- 변수 선언이 undefined로 초기화된 상태로 끌어올려져서 참조할 수 있지만 값은 undefined이다.
+
+#### let, const의 호이스팅
+
+- `let` 과 `const` 는 선언이 호이스팅되지만, 초기화되지 않은 상태로 접근할 수 없다.
+- TDZ로 인해 선언되기 전까지 참조가 불가능하다.
+
+### 요약
+
+| 특성          | `var`                     | `let`                     | `const`                               |
+| ------------- | ------------------------- | ------------------------- | ------------------------------------- |
+| **호이스팅**  | 선언 + 초기화 (undefined) | 선언만 호이스팅, TDZ 있음 | 선언만 호이스팅, TDZ 있음             |
+| **범위**      | 함수 스코프               | 블록 스코프               | 블록 스코프                           |
+| **재할당**    | 가능                      | 가능                      | 불가능 (단, 객체/배열 내용 수정 가능) |
+| **중복 선언** | 가능                      | 불가능                    | 불가능                                |
+
+### 정리
+
+- `var` 는 호이스팅이 일어나고, 함수 스코프를 가지며, 재할당이 가능하지만 블록 범위를 지원하지 않아 예기치 않은 결과를 초래할 수 있다.
+- `let` 은 블록 스코프를 가지며, 호이스팅 되지만 TDZ가 있어서 선언되기 전에는 참조할 수 없고, 재할당이 가능하다.
+- `const` 는 값을 재할당할 수 없고, 객체/배열의 내용은 수정이 가능하며, 호이스팅 되지만 TDZ가 있어 선언되기 전까지는 참조할 수 없다.
+
+<hr />
+
+## 얕은 복사 vs 깊은 복사
+
+### 얕은 복사 (Shallow Copy)
+
+객체의 1단계까지만 복사하는 방식이다.
+
+> 원본 객체의 참조 값(주소)만 복사하므로, 내부의 중첩된 객체는 그대로 원본을 참조하게 된다.
+
+#### 예제
+
+```js
+const obj1 = { name: 'A', details: { age: 25 } };
+const obj2 = { ...obj1 }; // 얕은 복사
+
+obj2.name = 'B'; //  obj2의 name 변경 -> obj1의 name에는 영향 없음
+obj2.details.age = 30; // obj2의 내부 객체 변경 -> onj1도 영향을 받는다.
+
+console.log(obj1); // { name: "A", details: { age: 30 } }
+console.log(obj2); // { name: "B", details: { age: 30 } }
+```
+
+객체 내부의 중첩된 객체(`details`)는 그대로 참조하기 때문에 `obj2`에서 `obj1` 도 영향을 받는다.
+
+#### 얕은 복사 방법
+
+- `Object.assign({}, obj)`
+- 스프레드 연산자 `{ …obj }`
+- 배열의 경우 `slice()` , `concat()` , `map()`
+
+```js
+const obj1 = { a: 1, b: { c: 2 } };
+
+// Object.assign
+const obj2 = Object.assign({}, obj1);
+
+// Spread Operator (...)
+const obj3 = { ...obj1 };
+
+// 배열의 얕은 복사
+const arr1 = [1, 2, { x: 3 }];
+const arr2 = arr1.slice();
+```
+
+- 내부의 중첩된 객체는 복사되지 않고 원본을 참조하기 때문에, 완전한 복사를 원해서는 깊은 복사가 필요하다.
+
+### 깊은 복사 (Deep Copy)
+
+원본 객체의 모든 값을 새로운 메로리에 복사하는 방식이다.
+
+> 내부 객체까지도 완전히 새로운 객체로 복사하여 원본과 독립적인 값을 가지게 된다.
+
+#### 예제
+
+```js
+const obj1 = { name: 'A', details: { age: 25 } };
+
+// 깊은 복사
+const obj2 = JSON.parse(JSON.stringify(obj1));
+
+obj2.details.age = 30; // obj2의 내부 객체 변경 → obj1에는 영향 없음
+
+console.log(obj1); // { name: "A", details: { age: 25 } }
+console.log(obj2); // { name: "A", details: { age: 30 } }
+```
+
+- `JSON.parse(JSON.stringfy(obj))` 를 사용하면 내부 객체까지도 완전히 복사되어 `obj2` 의 변경이 `obj1` 에 영향을 주지 않는다.
+
+#### 깊은 복사 방법
+
+`JSON.parse(JSON.stringify(obj))`
+
+- 객체를 문자열(JSON) 로 변환한 후 다시 객체로 변환하는 방식
+- 단순한 객체에서는 잘 동작하지만 함수, `undefined`, `Symbol` 같은 데이터는 복사되지 않음
+
+```js
+const obj1 = { a: 1, b: { c: 2 }, d: undefined };
+const obj2 = JSON.parse(JSON.stringify(obj1));
+
+console.log(obj2); // { a: 1, b: { c: 2 } } (undefined는 사라짐!)
+```
+
+`structuredClone(obj)`
+
+- 함수, `undefined`, `Date`, `RegExp` 등의 복사도 가능
+- 깊은 복사를 위한 가장 최신 방법
+
+```js
+const obj1 = { a: 1, b: { c: 2 }, d: undefined };
+const obj2 = structuredClone(obj1);
+
+console.log(obj2); // { a: 1, b: { c: 2 }, d: undefined }
+```
+
+<Toggle summary="JSON.stringify() vs structuredClone() ">
+
+| 비교 항목 | `JSON.stringify() + JSON.parse()` | `structuredClone()` |
+| 복사 방식 | JSON 변환 후 다시 객체로 변환 | 브라우저 내장 구조적 복사 |
+| --- | --- | --- |
+| 깊은 복사 | ✅ 가능 | ✅ 가능 |
+| `Date` 객체 | ❌ 문자열로 변환됨 | ✅ 정상적으로 유지됨 |
+| `RegExp` | ❌ 깨짐 | ✅ 유지됨 |
+| `Map`, `Set` | ❌ 사라짐 | ✅ 유지됨 |
+| `undefined` | ❌ 사라짐 | ✅ 유지됨 |
+| `Symbol` | ❌ 사라짐 | ❌ 사라짐 |
+| 함수 복사 | ❌ 불가능 | ❌ 불가능 |
+| 브라우저 지원 | 모든 브라우저 (IE 포함) | 최신 브라우저 (IE 지원 X) |
+| 실행 속도 | 빠름 | 상대적으로 느림 |
+
+- **간단한 객체라면?** →`JSON.stringify()` 사용
+- **복잡한 객체(`Date`, `Map`, `Set` 포함)라면?** → `structuredClone()` 사용
+- **최신 브라우저만 지원하면 괜찮다면?** → `structuredClone()` 추천
+- **Node.js 환경이라면?** → `lodash.cloneDeep()`추천 (`structuredClone()`미지원)
+
+</Toggle>
+
+Lodash `cloneDeep()`
+
+- 가장 강력하고 안정적인 깊은 복사 방식 (라이브러리 사용)
+- 함수, Date, Map, Set 등 거의 모든 타입의 데이터까지 완벽히 복사
+- 실무에서 가장 추천되는 방법
+
+```js
+import _ from 'lodash';
+
+const obj1 = { a: 1, b: { c: 2 }, d: new Date() };
+const obj2 = _.cloneDeep(obj1);
+
+console.log(obj2); // 완벽한 깊은 복사!
+```
+
+### 언제 사용해야 할까
+
+**얕은 복사**
+
+- 객체의 변경이 원본에 영향에 영향을 미쳐도 괜찮은 경우
+- 단순한 1단계 복사가 필요한 경우
+
+**깊은 복사**
+
+- 원본 객체가 절대 변경되면 안 되는 경우
+- 내부 객체까지 완전히 새로운 객체로 만들어야 하는 경우
+
+### 정리
+
+- 얕은 복사는 객체의 참조값만 복사하기 때문에 중첩된 객체는 원본과 공유된다.
+- 깊은 복사는 내부 객체까지도 완전히 새로운 메모리에 복사하여 원본과 독립적으로 동작한다.
+
+<hr />
+
+## 함수형 프로그래밍 개념
+
+자바스크립트는 객체지향 프로그래밍(OOP)뿐만 아니라 함수형 프로그래밍 (FP, Functional Programming) 도 지원한다.
+
+### 함수형 프로그래밍이란?
+
+> 함수를 1급 시민으로 사용하고, 부작용을 최소화하는 프로그래밍 방식
+
+- 순수 함수를 사용 → 부작용 최소화
+- 고차함수를 적극 활용 → 함수 조합으로 유연한 코드 작성
+- 불변성 유지 → 상태 변경을 지양
+- 선언형 스타일 → 명령형보다 더 직관적인 코드
+
+### 순수 함수란?
+
+> 같은 입력을 넣으면 항상 같은 결과를 반환하고, 부작용(Side Effect)이 없는 함수
+
+#### 순수 함수의 조건
+
+1. 동일한 입력 → 동일한 출력 (Deterministic)
+2. 외부 상태를 변경하지 않음 (No Side Effect)
+
+#### 예시
+
+```js
+// 순수 함수임
+function add(a, b) {
+  return a + b;
+}
+
+// 순수 함수가 아님
+let total = 0;
+
+function addToTotal(value) {
+  total += value;
+}
+
+function getRandomNumber() {
+  return Math.random();
+}
+```
+
+#### 순수 함수를 쓰는 이유
+
+- 예측 가능함
+- 디버깅과 테스트가 쉬움
+- 동시성 문제 최소화
+
+### 고차 함수란?
+
+> 다른 함수를 인자로 받거나, 함수를 반환하는 함수
+
+#### 예시
+
+```js
+// 함수를 인자로 받는 고차 함수
+function repeat(n, action) {
+  for (let i = 0; i < n; i++) {
+    action(i);
+  }
+}
+
+// 함수를 반환하는 고차 함수
+function createMultiplier(multiplier) {
+  return function (num) {
+    return num * multiplier;
+  };
+}
+
+const double = createMultiplier(2);
+console.log(double(5)); // 10
+
+const triple = createMultiplier(3);
+console.log(triple(5)); // 15
+```
+
+```js
+// map, filter, reduce
+const numbers = [1, 2, 3, 4, 5];
+
+const squared = numbers.map((num) => num * num);
+console.log(squared); // [1, 4, 9, 16, 25]
+
+const evens = numbers.filter((num) => num % 2 === 0);
+console.log(evens); // [2, 4]
+
+const sum = numbers.reduce((acc, cur) => acc + cur, 0);
+console.log(sum); // 15
+```
+
+#### 고차 함수를 사용하는 이유
+
+- 재사용성이 높음
+- 코드를 더 선언적으로 만들 수 있음
+- 불필요한 반복문을 줄여서 가독성 향상
+
+### 순수 함수 + 고차 함수
+
+```js
+const users = [
+  { name: 'Alice', age: 25 },
+  { name: 'Bob', age: 30 },
+  { name: 'Charlie', age: 35 },
+];
+
+// 순수 함수 사용
+const olderUsers = users.filter((user) => user.age >= 30);
+
+// 고차 함수 사용
+const names = olderUsers.map((user) => user.name);
+
+console.log(names); // ["Bob", "Charlie"]
+```
+
+### 정리
+
+- 순수 함수 (Pure Function)
+  - 같은 입력 → 항상 같은 출력
+  - 부작용(Side Effect) 없다.
+  - 예측 가능, 유지보수 쉽다.
+- 고차 함수 (Higher-Order Function)
+
+  - 함수를 인자로 받거나 반환하는 함수이다.
+  - `map()` , `filter()` , `reduce()` 같은 배열 메서드가 대표적이다.
+  - 코드의 재사용성과 가독성을 높이는 데 유용하다.
+
+<hr />
+
+## 이벤트 위임과 이벤트 버블링
+
+### 이벤트 버블링
+
+> 이벤트가 발생한 요소에서 시작하여 부모 요소로 전파되는 현상
+
+#### 동작 방식
+
+1. 이벤트가 특정 요소에서 발생
+2. 해당 이벤트가 부모 요소로 전파됨
+3. 최상위 `document` 까지 계속 올라감
+
+#### 예시
+
+```js
+document.getElementById('child').addEventListener('click', function () {
+  console.log('Child');
+});
+
+document.getElementById('parent').addEventListener('click', function () {
+  console.log('Parent');
+});
+
+document.getElementById('grandparent').addEventListener('click', function () {
+  console.log('Grandparent');
+});
+```
+
+**HTML 구조**
+
+```jsx
+<div id="grandparent">
+  <div id="parent">
+    <div id="child">클릭</div>
+  </div>
+</div>
+```
+
+**`#child` 클릭 시 콘솔 출력**
+
+```
+Child
+Parent
+Grandparent
+```
+
+`#child` 를 클릭해도 부모 요소인 `#parent` → `#grandparent` 까지 이벤트가 전파된다.
+
+이벤트 버블링을 방지하려면 `event.stopPropagation()` 을 추가하면 된다.
+
+```js
+document.getElementById('child').addEventListener('click', function (event) {
+  event.stopPropagation();
+  console.log('Child');
+});
+```
+
+### 이벤트 위임
+
+> 하위 요소의 이벤트를 부모 요소에서 처리하는 기법
+> 많은 이벤트 리스너를 추가하는 대신, 부모 요소에서 한 번만 이벤트를 감지하는 방식
+
+#### 이벤트 위임이 필요한 이유
+
+- **성능 최적화**: 많은 요소에 이벤트 리스너를 추가하면 성능이 저하됨
+- **동적 요소 처리**: 동적으로 생성된 요소에도 이벤트를 적용 가능
+
+#### 예시
+
+```js
+document.getElementById('parent').addEventListener('click', function (event) {
+  if (event.target.classList.contains('child')) {
+    console.log('Child', event.target.innerText);
+  }
+});
+```
+
+**HTML 구조**
+
+```jsx
+<div id="parent">
+  <div class="child">Item 1</div>
+  <div class="child">Item 2</div>
+  <div class="child">Item 3</div>
+</div>
+```
+
+**`Item 2` 클릭 시 콘솔 출력**
+
+```
+Child Item 2
+```
+
+### 정리
+
+- 이벤트 버블링
+  - 이벤트가 발생한 요소에서 부모 요소로 전파됨
+  - `event.stopPropagation()` 으로 방지 가능
+- 이벤트 위임
+  - 부모 요소에서 하위 요소의 이벤트를 감지하는 기법
+  - 많은 요소에 이벤트 리스너를 추가하지 않아도 됨
+  - 동적으로 추가되는 요소에도 이벤트 적용 가능
+
+<hr />
+
+## 모듈 시스템
+
+코드를 여러 파일로 분리하고 필요한 부분만 가져와 사용할 수 있도록 도와주는 기능이다.
+
+### CommonJS (CJS)
+
+> Node.js 환경에서 주로 사용되는 모듈 시스템
+> `require()` 을 사용해 모듈을 불러오고 , `module.exports` 또는 `exports` 로 내보냄
+
+#### 사용법
+
+**모듈 내보내기**
+
+```js
+// utils.js
+function add(a, b) {
+  return a + b;
+}
+
+module.exports = { add };
+
+// 이렇게도 가능함
+exports.add = (a, b) => a + b;
+```
+
+**모듈 가져오기**
+
+```js
+// main.js
+const utils = require('./utils'); // 파일 확장자는 생략 가능
+console.log(utils.add(2, 3)); // 5
+```
+
+#### 특징
+
+- Node.js에서 기본적으로 사용된다.
+- 동기적 로딩: 한 줄씩 실행, 파일을 모두 불러올 때까지 기다림
+- `require()` 은 동적 임포트 가능하다.
+- 순환 참조 문제 발생 가능 ( `A → B` , `B → A` 에서 무한 참조 가능)
+
+### ES Modules (ESM)
+
+> ES6 부터 표준으로 도입된 모듈 시스템
+> `import`와 `export`를 사용하여 모듈을 가져오고 내보냄
+
+#### 사용법
+
+**내보내기**
+
+```js
+// utils.js
+export function add(a, b) {
+  return a + b;
+}
+```
+
+**가져오기**
+
+```js
+// main.js
+import { add } from './utils.js';
+
+console.log(add(2, 3)); // 5
+```
+
+**`export default` 사용**
+
+```js
+// utils.js
+export default function multiply(a, b) {
+  return a * b;
+}
+
+// main.js
+import multiply from './utils.js'; // 중괄호 없이 가져옴
+
+console.log(multiply(2, 3)); // 6
+```
+
+#### 특징
+
+- 브라우저, Node.js 에서 사용 가능
+- 비동기적 로딩 지원 (`import()` 로 동적 임포트 가능)
+- 정적인 구조 (모든 `import` 는 최상위에서 선언해야 함)
+- `type=”module”` 을 사용해야 브라우저에서 ESM을 실행할 수 있음
+
+```jsx
+<script type="module" src="main.js"></script>
+```
+
+### ESM을 Node.js에서 사용하려면?
+
+1. package.json에 `“type”: “module”` 추가
+
+현재 블로그 레포에도 이렇게 되어있다.
+
+<img
+  src="/img/contents/javascript/package_json.png"
+  alt="package.json 이미지"
+/>
+
+2. `.mjs` 확장자 사용
+
+### 정리
+
+- CommonJS
+  - `require()` 와 `module.exports` 사용
+  - Node.js 에서 기본적으로 사용됨
+  - 동기적 로딩
+- ES Modules
+  - `import` 와 `export` 사용
+  - 브라우저, 최신 Node.js 환경에서 사용 가능
+  - 비동기적 로딩 지원
+
+<hr />
+
+## GC와 메모리 누수 방지
+
+자바스크립트는 자동으로 메모리를 관리하기 때문에 직접 메로리를 해제하지 않아도 된다.
+
+### Garbage Collection (GC)란?
+
+> 필요하지 않은 메모리를 자동으로 해제하는 기능
+
+자바스크립트 엔진은 사용되지 않는 객체를 탐색하여 자동으로 제거한다.
+
+- 더 이상 접근할 수 없는 값이 메모리에 남아 있다면 GC가 이를 해제
+
+### GC의 동작 방식
+
+GC는 Mark & Sweep 알고리즘을 사용한다.
+
+#### Mark & Sweep 과정
+
+1. Mark (표시 단계) → 사용 중인 객체를 찾고 “필요해” 라고 표시
+2. Sweep (정리 단계) → 표시되지 않은 객체를 메모리에서 제거
+
+#### 예시
+
+```js
+let obj = { name: 'A' };
+
+obj = null;
+```
+
+`obj = null` 이후에는 객체가 참조되지 않으므로 GC가 이를 삭제한다.
+
+### 메모리 누수 (Memory Leak)란?
+
+> GC가 해제하지 못하는 불필요한 메모리가 계속 남이있는 현상
+
+GC는 “어디에서도 참조되지 않는 값”만 삭제하기 때문에 실수로 참조를 유지한 채 방지하면 메모리 누수가 발생할 수 있다.
+
+#### 예시
+
+**전역 변수 사용**
+
+```js
+let globalVar = [];
+```
+
+- 전역 변수를 피하고 `const` 나 `let` 을 블록 스코프 내에서 사용
+- IIFE (즉시 실행 함수) 활용
+
+<Toggle summary="IIFE 즉시 실행 함수">
+
+함수를 선언하자마자 바로 실행하는 방식이다.
+
+`(function() { … })()` 과 같은 형태로 작성된다.
+
+**IIFE를 사용하는 이유**
+
+**전역 변수 오염 방지**
+
+```jsx
+(function () {
+  let message = 'Hello';
+  console.log(message); // Hello
+})();
+
+console.log(message); // ReferenceError: message is not defined
+```
+
+**비공개 변수**
+
+```jsx
+const counter = (function () {
+  let count = 0; // 외부에서 접근 불가능한 변수
+
+  return {
+    increment: () => ++count,
+    decrement: () => --count,
+    getCount: () => count,
+  };
+})();
+
+console.log(counter.count); // undefined (외부 접근 불가)
+```
+
+**비동기 코드에서 사용**
+
+```jsx
+(async function () {
+  const data = await fetch('https://example.com/1').then((res) => res.json());
+
+  console.log(data);
+})();
+```
+
+</Toggle>
+
+```jsx
+(() => {
+  let localVar = [];
+})();
+```
+
+`localVar`는 함수 실행 후 사라진다.
+
+**클로저**
+
+```jsx
+function createClosure() {
+  let bigData = new Array(1000000).fill('data');
+
+  return function () {
+    console.log(bigData[0]);
+  };
+}
+
+const closureFunc = createClosure();
+```
+
+- 클로저 내부에서 불필요한 데이터를 `null` 로 설정해 해제
+
+```jsx
+function createClosure() {
+  let bigData = new Array(1000000).fill('data');
+
+  return function () {
+    console.log(bigData[0]);
+    bigData = null;
+  };
+}
+```
+
+**타이머 (`setInterval`, `setTimeout`)를 해제하지 않음**
+
+```jsx
+setInterval(() => {
+  console.log('하이');
+}, 1000);
+```
+
+멈추지 않고 계속 실행된다.
+
+- `clearInterval()` 또는 `clearTimeout()` 사용
+
+```jsx
+const interval = setInterval(() => {
+  console.log('하이');
+}, 1000);
+
+clearInterval(interval);
+```
+
+### 정리
+
+- 불필요한 전역 변수 사용 피하기
+- 클로저 내부에서 참조를 해제하기
+- `setInterval`, `setTimeout` 사용 후 해제하기
+
+<hr />
+
+## 느낀점
+
+이번에 JavaScript의 핵심 개념들을 정리하면서, 단순히 문법을 아는 것과 개념을 깊이 이해하는 것의 차이를 확실히 느꼈다.
+실행 컨텍스트, 클로저, 이벤트 루프 같은 개념들은 단순한 설명만 보면 이해한 것 같았지만, 직접 예제를 작성하고 동작 원리를 분석하면서 훨씬 더 명확하게 이해할 수 있었다.
+
+그중에서도 this 바인딩과 클로저는 평소에도 헷갈리기 쉬운 개념이었는데, 정리하면서 각각의 동작 방식과 차이점을 확실히 정리할 수 있어서 좋았다.
+또한, 비동기 처리 (Event Loop, Promise, async/await) 부분에서는 마이크로태스크와 매크로태스크의 우선순위를 다시 한번 정리하면서, 실제 코드에서 예상과 다르게 동작하는 이유를 더 잘 이해하게 되었다.
+
+이번 정리를 통해 더 깊이 있는 사고를 할 수 있는 능력을 키우는 것이 중요하다는 걸 다시 한번 느꼈다.
+앞으로는 단순히 개념을 암기하는 것이 아니라, 실제 프로젝트에서 어떻게 적용할 수 있을지 고민하면서 학습을 이어가야겠다.
+특히, 클로저와 this 바인딩은 리액트의 useCallback, useMemo와도 관련이 깊기 때문에 실제 리액트 코드에서 더 많이 활용해보고 최적화 방법까지 공부할 계획이다.
