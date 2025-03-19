@@ -22,7 +22,7 @@ const TableOfContents = () => {
         <p className="transition-colors-base pb-10 pl-12 text-start font-bold text-gray-400 dark:text-white">
           목차
         </p>
-        <ul className="space-y-4 text-13 font-medium text-gray-400 dark:text-gray-200">
+        <ul className="max-h-400 space-y-4 overflow-y-auto text-13 font-medium text-gray-400 dark:text-gray-200 ">
           {headings.map((heading) => (
             <li
               key={heading.id}
